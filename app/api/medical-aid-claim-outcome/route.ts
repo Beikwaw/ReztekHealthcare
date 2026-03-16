@@ -7,18 +7,18 @@ export const runtime = "nodejs"
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
 const FROM_EMAIL =
-  process.env.CONSULTATION_EMAIL_FROM || "Dr Winston Mkhonza Health Practice <noreply@drwcmkhonzaportal.co.za>"
+  process.env.CONSULTATION_EMAIL_FROM || "Reztek Healthcare Practice <noreply@reztek-health.co.za>"
 
 function getEmailLogoUrl(request: NextRequest): string {
   const envLogo = process.env.EMAIL_LOGO_URL
   if (envLogo && envLogo.trim()) return envLogo.trim()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  const path = "/dr-wc-mkhonza-healthcare-logo.png"
+  const path = "/reztek-logo.png"
   if (siteUrl && siteUrl.trim()) return `${siteUrl.replace(/\/+$/, "")}${path}`
   const host = request.headers.get("x-forwarded-host")
   const proto = request.headers.get("x-forwarded-proto") || "https"
   if (host) return `${proto}://${host}${path}`
-  return `https://drwcmkhonzaportal.co.za${path}`
+  return `https://reztek-health.co.za${path}`
 }
 
 function parseBearerToken(request: NextRequest): string | null {

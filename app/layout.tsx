@@ -9,8 +9,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Dr. Mkhonza | Staff Portal',
-  description: 'Staff portal for Dr. Mkhonza Health Practice. Internal use only.',
+  title: 'Reztek Healthcare | Staff Portal',
+  description: 'Staff portal for Reztek Healthcare Practice. Internal use only.',
   icons: {
     icon: [
       {

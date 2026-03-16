@@ -2,7 +2,6 @@
 
 import React, { useEffect } from "react"
 import { usePathname, useRouter } from "next/navigation"
-import { multiFactor } from "firebase/auth"
 
 import { useAuth } from "@/lib/auth-context"
 import { DataProvider } from "@/lib/data-context"
@@ -15,7 +14,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { isAuthenticated, isLoading, user, firebaseUser, logout } = useAuth()
+  const { isAuthenticated, isLoading, user } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
 
@@ -36,29 +35,7 @@ export default function DashboardLayout({
       router.push("/medical-aid/claims")
       return
     }
-
-    // Allow MFA enrollment route for clerks
-    if (pathname?.startsWith("/dashboard/mfa")) {
-      return
-    }
-
-    // Only clerks require MFA; admin does not
-    if (user?.role === "clerk") {
-      if (!firebaseUser) return
-
-      const enrolled = multiFactor(firebaseUser).enrolledFactors
-      if (!enrolled || enrolled.length === 0) {
-        router.push("/dashboard/mfa/enroll")
-        return
-      }
-
-      const fourDaysMs = 4 * 24 * 60 * 60 * 1000
-      const last = user.lastMfaVerifiedAt?.getTime()
-      if (!last || Date.now() - last > fourDaysMs) {
-        logout().finally(() => router.push("/login?mfa=expired"))
-      }
-    }
-  }, [isAuthenticated, isLoading, user, firebaseUser, pathname, router, logout])
+  }, [isAuthenticated, isLoading, user, pathname, router])
 
   if (isLoading || !isAuthenticated || !user || user.role === "patient") {
     return (
