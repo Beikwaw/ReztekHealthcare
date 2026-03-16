@@ -1,0 +1,204 @@
+rules_version = '2';
+// These rules apply to client-side (Firebase SDK) access only.
+// Server-side API routes using Firebase Admin SDK (e.g. PDF generation, sending emails)
+// use the service account and are not restricted by these rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get user role (with error handling)
+    function getUserRole() {
+      let userData = get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      return userData != null && userData.role != null ? userData.role : 'patient';
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == 'admin';
+    }
+    
+    // Helper function to check if user is doctor
+    function isDoctor() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == 'doctor';
+    }
+    
+    // Helper function to check if user is clerk
+    function isClerk() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == 'clerk';
+    }
+    
+    // Helper function to check if user is pharmacy
+    function isPharmacy() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == 'pharmacy';
+    }
+
+    function isMedicalAid() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() == 'medical-aid';
+    }
+    
+    // Patients do not authenticate to the staff portal; no isPatient() check.
+    
+    // Helper function to check if user is staff (admin, doctor, clerk, pharmacy)
+    function isStaff() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             getUserRole() in ['admin', 'doctor', 'clerk', 'pharmacy'];
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can always read their own profile (needed for role checking)
+      // Staff can read all user profiles
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'doctor', 'clerk', 'pharmacy'])
+      );
+      // Users can create their own profile, admins can create any
+      allow create: if isAuthenticated() && (request.auth.uid == userId ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      // Users can update their own profile, admins can update any
+      allow update: if isAuthenticated() && (request.auth.uid == userId ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+      // Only admins can delete
+      allow delete: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Patients collection (delete only via backend API)
+    match /patients/{patientId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if false;
+    }
+    
+    // Appointments collection (delete only via backend API)
+    match /appointments/{appointmentId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if false;
+    }
+    
+    // Invoices collection (delete only via backend API)
+    match /invoices/{invoiceId} {
+      allow read: if isStaff();
+      allow create, update: if isStaff();
+      allow delete: if false;
+    }
+    
+    // Medical Records collection (delete only via backend API)
+    match /medicalRecords/{recordId} {
+      allow read: if isDoctor() || isAdmin();
+      allow create, update: if isDoctor() || isAdmin();
+      allow delete: if false;
+    }
+    
+    // Prescriptions collection
+    match /prescriptions/{prescriptionId} {
+      // Doctors, pharmacy, and admins can read all prescriptions
+      allow read: if isDoctor() || isPharmacy() || isAdmin();
+      // Only doctors and admins can create prescriptions
+      allow create: if isDoctor() || isAdmin();
+      // Pharmacy can update prescription status
+      allow update: if isPharmacy() || isDoctor() || isAdmin();
+      // Only admins can delete prescriptions
+      allow delete: if isAdmin();
+    }
+    
+    // Pharmacy Orders collection
+    match /pharmacyOrders/{orderId} {
+      // Pharmacy, doctors, and admins can read all orders
+      allow read: if isPharmacy() || isDoctor() || isAdmin();
+      // Staff can create orders
+      allow create: if isStaff();
+      // Pharmacy can update order status
+      allow update: if isPharmacy() || isAdmin();
+      // Only admins can delete orders
+      allow delete: if isAdmin();
+    }
+    
+    // Consultations collection (delete only via backend API)
+    match /consultations/{consultationId} {
+      allow read, create, update: if isStaff();
+      allow delete: if false;
+    }
+    
+    // Deletion requests: clerk creates, admin reads; only backend updates to completed
+    match /deletionRequests/{requestId} {
+      allow read: if isAdmin() || isClerk();
+      allow create: if isClerk();
+      allow update, delete: if false;
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Staff can create notifications
+      allow create: if isStaff();
+      // Users can update their own notifications (mark as read)
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Only admins can delete notifications
+      allow delete: if isAdmin();
+    }
+    
+    // Patient audit logs (who did what to which patient)
+    match /patientAuditLogs/{logId} {
+      // Staff can read audit logs
+      allow read: if isStaff();
+      // Staff can create audit logs (e.g. on registration, status change)
+      allow create: if isStaff();
+      // Only admins can update or delete
+      allow update, delete: if isAdmin();
+    }
+    
+    // Auth audit logs (login/logout for security)
+    match /authAuditLogs/{logId} {
+      // Any authenticated user can create (on login/logout)
+      allow create: if isAuthenticated();
+      // Only admins can read
+      allow read: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+    
+    // Billing audit logs (invoice changes)
+    match /billingAuditLogs/{logId} {
+      // Staff can append billing audit entries
+      allow create: if isStaff();
+      // Only admins can read and manage billing logs
+      allow read, update, delete: if isAdmin();
+    }
+    
+    // Medical Aid Claims
+    match /medicalAidClaims/{claimId} {
+      // Doctors, admins, and clerks can read claims.
+      // Only doctors and admins can create or update claims.
+      allow read: if isDoctor() || isAdmin() || isClerk() || isMedicalAid();
+      allow create, update: if isDoctor() || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Default: deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+

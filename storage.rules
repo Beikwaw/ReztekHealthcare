@@ -1,0 +1,13 @@
+rules_version = '2';
+// Storage rules for Dr Mkhonza WC portal.
+// Uploads (consultation PDFs, etc.) are done from API routes using Firebase Admin SDK, which bypasses these rules.
+// These rules apply to client-side access only: allow staff (authenticated users) to read.
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Authenticated users (staff with Firestore profile) can read; writes are server-side only
+    match /{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}

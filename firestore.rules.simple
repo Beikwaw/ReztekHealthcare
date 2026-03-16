@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get user role safely
+    function getUserRole() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc != null && userDoc.data != null ? userDoc.data.role : null;
+    }
+    
+    // Users collection - must be first to allow role checking
+    match /users/{userId} {
+      // Users can read their own profile, staff can read all
+      allow read: if isAuthenticated() && (
+        request.auth.uid == userId || 
+        getUserRole() in ['admin', 'doctor', 'clerk', 'pharmacy']
+      );
+      // Users can create/update their own profile
+      allow create, update: if isAuthenticated() && request.auth.uid == userId;
+      // Admins can do everything
+      allow read, write: if isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    // Patients collection
+    match /patients/{patientId} {
+      // Staff can read all, patients can read their own
+      allow read: if isAuthenticated() && (
+        getUserRole() in ['admin', 'doctor', 'clerk', 'pharmacy'] ||
+        (getUserRole() == 'patient' && resource.data.userId == request.auth.uid)
+      );
+      // Staff can write
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'doctor', 'clerk'];
+    }
+    
+    // Appointments collection
+    match /appointments/{appointmentId} {
+      // Staff can read all, patients can read their own
+      allow read: if isAuthenticated() && (
+        getUserRole() in ['admin', 'doctor', 'clerk', 'pharmacy'] ||
+        (getUserRole() == 'patient' && resource.data.patientId == request.auth.uid)
+      );
+      // Staff can write
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'doctor', 'clerk'];
+    }
+    
+    // Invoices collection
+    match /invoices/{invoiceId} {
+      // Staff can read all, patients can read their own
+      allow read: if isAuthenticated() && (
+        getUserRole() in ['admin', 'doctor', 'clerk', 'pharmacy'] ||
+        (getUserRole() == 'patient' && resource.data.patientId == request.auth.uid)
+      );
+      // Staff can write
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'doctor', 'clerk'];
+    }
+    
+    // Medical Records collection
+    match /medicalRecords/{recordId} {
+      // Doctors and admins can read all, patients can read their own
+      allow read: if isAuthenticated() && (
+        getUserRole() in ['admin', 'doctor'] ||
+        (getUserRole() == 'patient' && resource.data.patientId == request.auth.uid)
+      );
+      // Only doctors and admins can write
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'doctor'];
+    }
+    
+    // Consultations collection
+    match /consultations/{consultationId} {
+      // Doctors and admins can read all, patients can read their own
+      allow read: if isAuthenticated() && (
+        getUserRole() in ['admin', 'doctor'] ||
+        (getUserRole() == 'patient' && resource.data.patientId == request.auth.uid)
+      );
+      // Only doctors and admins can create/update consultations
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'doctor'];
+    }
+    
+    // Prescriptions collection
+    match /prescriptions/{prescriptionId} {
+      // Staff can read all, patients can read their own
+      allow read: if isAuthenticated() && (
+        getUserRole() in ['admin', 'doctor', 'pharmacy'] ||
+        (getUserRole() == 'patient' && resource.data.patientId == request.auth.uid)
+      );
+      // Doctors, pharmacy, and admins can write
+      allow write: if isAuthenticated() && getUserRole() in ['admin', 'doctor', 'pharmacy'];
+    }
+    
+    // Pharmacy Orders collection
+    match /pharmacyOrders/{orderId} {
+      // Staff can read all, patients can read their own
+      allow read: if isAuthenticated() && (
+        getUserRole() in ['admin', 'doctor', 'pharmacy'] ||
+        (getUserRole() == 'patient' && resource.data.patientId == request.auth.uid)
+      );
+      // Staff can create, pharmacy and admins can update
+      allow create: if isAuthenticated() && getUserRole() in ['admin', 'doctor', 'clerk'];
+      allow update: if isAuthenticated() && getUserRole() in ['admin', 'pharmacy'];
+    }
+    
+    // Notifications collection
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      // Staff can create notifications
+      allow create: if isAuthenticated() && getUserRole() in ['admin', 'doctor', 'clerk', 'pharmacy'];
+      // Users can update their own notifications
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+  }
+}
+
