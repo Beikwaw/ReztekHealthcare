@@ -37,8 +37,21 @@ export async function getFirebaseAdmin() {
     serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8")) as Record<string, unknown>
   }
 
+  const normalizedBucket = (() => {
+    if (!storageBucket) return null
+    const b = storageBucket.trim()
+    if (!b) return null
+    // The client SDK can use *.firebasestorage.app, but Admin SDK expects the actual bucket name.
+    // Normalize to the default bucket name to avoid auth/bucket errors.
+    if (b.endsWith(".firebasestorage.app")) {
+      const pid = projectId || (serviceAccount.project_id ? String(serviceAccount.project_id) : "")
+      return pid ? `${pid}.appspot.com` : null
+    }
+    return b
+  })()
+
   const bucket =
-    storageBucket ||
+    normalizedBucket ||
     (projectId ? `${projectId}.appspot.com` : null) ||
     (serviceAccount.project_id ? `${String(serviceAccount.project_id)}.appspot.com` : undefined)
   admin.initializeApp({

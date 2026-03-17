@@ -64,6 +64,11 @@ export function Header() {
               <Phone className="w-4 h-4" />
               <span>+27 12 345 6789</span>
             </a>
+            <Link href="/get-quote">
+              <Button variant="secondary">
+                Get a quote
+              </Button>
+            </Link>
             <Link href="/login">
               <Button variant="outline" className="bg-transparent">
                 Staff Login
@@ -115,6 +120,11 @@ export function Header() {
               <Phone className="w-4 h-4" />
               <span>+27 12 345 6789</span>
             </a>
+            <Link href="/get-quote" onClick={() => setIsMenuOpen(false)}>
+              <Button variant="secondary" className="w-full">
+                Get a quote
+              </Button>
+            </Link>
             <Link href="/login" onClick={() => setIsMenuOpen(false)}>
               <Button variant="outline" className="w-full bg-transparent">
                 Staff Login

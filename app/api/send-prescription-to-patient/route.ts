@@ -23,7 +23,7 @@ function getEmailLogoUrl(_request: NextRequest): string {
   const envLogo = process.env.EMAIL_LOGO_URL
   if (envLogo && trimStr(envLogo)) return trimStr(envLogo)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  const path = "/reztek-logo.png"
+  const path = "/reztek-logo.svg"
   if (siteUrl && trimStr(siteUrl)) {
     const base = trimStr(siteUrl)
     const re = /\/+$/
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       address: patient?.address as string | undefined,
       dateOfBirth: patient?.dateOfBirth as Date | string | undefined,
       patientNumber: patient?.patientNumber as string | undefined,
-      doctorName: (consultation.doctorName as string) || "Dr Winston Mkhonza",
+      doctorName: (consultation.doctorName as string) || "Reztek Healthcare Practice",
     }
 
     type PrescriptionItem = { medication?: string; dosage?: string; frequency?: string; duration?: string; instructions?: string }

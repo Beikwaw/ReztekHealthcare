@@ -1,5 +1,5 @@
 /**
- * POST: Send medical aid claim PDF to clerk (clerk1drmkhonza@gmail.com).
+ * POST: Send medical aid claim PDF to the configured clerk email.
  * Body: { claimId }. Regenerates PDF from claim data and attaches to email.
  */
 

@@ -1,7 +1,7 @@
 "use client"
 
 /**
- * Invoice PDF generation (Dr. W.C. Mkhonza letterhead).
+ * Invoice PDF generation (Reztek Healthcare Practice letterhead).
  * Used when the user clicks "Download PDF" on the invoice detail page:
  * Dashboard → Billing → [invoice row] → View & Download PDF → Download PDF button.
  * PDFs are generated in the browser and downloaded; they are not stored in Firestore.

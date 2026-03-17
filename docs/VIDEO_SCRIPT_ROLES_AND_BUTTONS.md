@@ -18,9 +18,7 @@
 - After clicking **Sign in**, you are taken straight to the **Dashboard**. The sidebar shows “Logged in as Administrator” and the admin menu.
 
 **If you are Clerk**  
-- **First-time clerks:** After your first sign-in with email and password, you may be redirected to **Set up Google Authenticator**. Your email must be verified first; if not, click **Verify your email**, then use the link in your inbox and refresh the page. Then you will see a **QR code**—scan it with Google Authenticator (or similar), enter the **6-digit code** in the field, and click **Enable two-factor authentication**. You are then sent to the dashboard.
-- **Every time after that:** When you sign in with email and password, the screen will show **“Security check required”** and a field for the **6-digit code**. Open your authenticator app, enter the code, and click **Verify code**. You are then signed in and taken to the dashboard.
-- If it has been a long time (e.g. 4+ days) since you last entered your code, the app will ask you to sign in again and enter the code once more.
+- You sign in with **email and password only**. After clicking **Sign in**, you are taken straight to the **Dashboard** (no two-factor authentication).
 
 **If you are Doctor or Pharmacy**  
 - You sign in with **email and password only**. No 6-digit code. After **Sign in**, you go straight to your role’s dashboard.
@@ -106,10 +104,10 @@
 
 ### Who is Clerk?
 - The **Clerk** (reception) registers patients, manages the waiting list, appointments, billing, and medical aid claims. The clerk **does not** see clinical content (symptoms, diagnosis, AI summary) or manage staff, settings, or full reports.  
-- **Clerks must use two-factor authentication:** set up once (QR code + 6-digit code), then enter the 6-digit code every time they sign in.
+- Clerks sign in with **email and password only** (no two-factor authentication).
 
 ### What you see when you sign in (Clerk)
-1. After entering your **6-digit code** and clicking **Verify code**, you land on **Dashboard**.
+1. After clicking **Sign in**, you land on **Dashboard**.
 2. You see a welcome message and **Register New Patient** (or similar) as the main action.
 3. **Stats:** e.g. Total Patients, Today’s Registrations, Waiting List, Today’s Date.
 4. **Quick Actions:** Register New Patient, Search Patients, View Waiting List.
@@ -234,9 +232,37 @@
 | Role   | Main tasks | Key pages / buttons |
 |--------|------------|----------------------|
 | **Admin** | Full access except appointments; staff (real data), patients, consultations, pharmacy, billing, **Patient Activity** (filter: All/Deleted/Status), **Deletion Requests**, **Security audit** (login/logout), **Reports** (real data), Settings | Dashboard → Quick Actions (Staff, Patients, Settings); Sidebar: Patient Activity, Deletion Requests, Staff, Reports, Patients, Consultations, Billing, Pharmacy, Settings; Sign Out |
-| **Clerk** | Register patients, waiting list, appointments, billing, medical aid; **MFA required** (6-digit code every login) | Register Patient, Patients (search/view/edit), Waiting List (View Details, Remove), Billing (New invoice), Appointments, Medical Aid Claims/Billing; Sign Out |
+| **Clerk** | Register patients, waiting list, appointments, billing, medical aid; email/password sign-in only | Register Patient, Patients (search/view/edit), Waiting List (View Details, Remove), Billing (New invoice), Appointments, Medical Aid Claims/Billing; Sign Out |
 | **Doctor** | Queue, consultations, symptoms, AI summary, prescriptions, complete visit; no MFA | Waiting Patients → Begin Consultation; New Consultation (checkboxes, questionnaire, Generate AI Summary, Doctor approves, Complete Consultation); Consultation detail (Prescription, Complete consultation); Sign Out |
 | **Pharmacy** | Pending orders, dispense history | Pending Orders, Dispense History; Sign Out |
+
+---
+
+## Why This System Is Beneficial to a Healthcare Clinic
+
+- **One place for everything** – Patient registration, waiting list, consultations, prescriptions, billing, and medical aid claims live in a single portal. Staff spend less time switching tools and more time with patients.
+- **Role-based access** – Admins, clerks, doctors, and pharmacy each see only what they need. Clinical details stay with clinicians; reception handles front desk and billing without seeing sensitive notes.
+- **Faster consultations** – AI-assisted summaries help doctors capture symptoms and draft findings quickly. Less typing means more face-to-face time and clearer records.
+- **Clear billing and claims** – Invoices and medical aid submissions are generated from consultation data. Fewer manual forms and fewer errors mean faster payments and less admin.
+- **Audit and compliance** – Patient activity (deletions, status changes) and security audit (logins/logouts) give clinics a traceable record for governance and dispute resolution.
+- **Scalable and professional** – The same system works for a small practice or a multi-doctor clinic. Reztek branding and letterhead keep communications consistent and professional.
+
+---
+
+## Suggested Monthly Client Pricing (Rands)
+
+Use these as a starting point; adjust for practice size, location, and included support.
+
+| Tier | Monthly fee (ZAR) | Typical use |
+|------|-------------------|-------------|
+| **Small practice** (1–2 clinicians, single site) | **R 1 500 – R 3 000** | Basic staff portal, patients, consultations, billing, basic support |
+| **Medium practice** (3–8 clinicians or 2 sites) | **R 3 500 – R 6 500** | Above + medical aid integration, more users, priority support |
+| **Large / multi-site** | **R 7 000 – R 12 000+** | Full features, multiple locations, dedicated onboarding and support |
+
+- **Per-seat add-ons:** Extra doctors or clerks beyond the tier: about **R 200 – R 400** per user per month.
+- **One-off setup:** Consider **R 2 000 – R 5 000** for initial configuration, training, and data migration (optional).
+
+**Recommendation:** Start at **R 2 000 – R 2 500/month** for a typical small clinic, then scale pricing as you add users and features.
 
 ---
 

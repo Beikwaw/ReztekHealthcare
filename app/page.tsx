@@ -32,6 +32,15 @@ export default function Home() {
               Sign in
             </Button>
           </Link>
+          <Link href="/get-quote">
+            <Button
+              size="lg"
+              variant="outline"
+              className="min-w-[220px] h-12 text-base font-semibold"
+            >
+              Get a quote
+            </Button>
+          </Link>
           <Link
             href="/login"
             className="text-sm text-neutral-600 hover:text-neutral-900 underline-offset-2 hover:underline"

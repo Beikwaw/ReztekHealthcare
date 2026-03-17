@@ -19,8 +19,8 @@ export default function SettingsPage() {
 
   // Settings state
   const [practiceSettings, setPracticeSettings] = useState({
-    name: "Dr. Mkhonza General Practitioner Health Practice",
-    email: "info@drmkhonza.co.za",
+    name: "Reztek Healthcare Practice",
+    email: "info@reztekhealth.example.com",
     phone: "+27 11 123 4567",
     address: "123 Medical Centre, Johannesburg, South Africa",
     workingHours: "Mon-Fri: 8:00 AM - 5:00 PM, Sat: 8:00 AM - 12:00 PM"

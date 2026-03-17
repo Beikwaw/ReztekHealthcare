@@ -11,7 +11,7 @@ function getEmailLogoUrl(request: NextRequest): string {
     return envLogo.trim()
   }
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  const path = "/reztek-logo.png"
+  const path = "/reztek-logo.svg"
   if (siteUrl && siteUrl.trim()) {
     return `${siteUrl.replace(/\/+$/, "")}${path}`
   }

@@ -19,13 +19,10 @@
  *   --fix                Apply updates with update() calls
  */
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 const path = require("path")
 
 async function getFirebaseAdmin() {
   // Import via compiled TS helper so we share config with the app
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const adminModule = await import(path.join("..", "lib", "firebase-admin"))
   return adminModule.getFirebaseAdmin()
 }
@@ -427,7 +424,6 @@ async function normalizeDeletionRequests({ admin, db, dryRun }) {
 async function main() {
   const args = parseArgs(process.argv)
   if (!args.collection) {
-    // eslint-disable-next-line no-console
     console.error(
       "Missing --collection. Expected one of: users, patients, appointments, invoices, consultations, medicalAidClaims, pharmacyOrders, notifications, deletionRequests",
     )
@@ -472,7 +468,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error("firestore-normalize-cli failed:", err)
   process.exit(1)
 })

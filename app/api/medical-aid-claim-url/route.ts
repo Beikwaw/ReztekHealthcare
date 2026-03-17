@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getFirebaseAdmin } from "@/lib/firebase-admin"
-
-const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+import { getFirebaseAdmin, getAdminStorage } from "@/lib/firebase-admin"
 
 export async function POST(request: NextRequest) {
   try {
-    if (!storageBucket && !projectId) {
-      return NextResponse.json(
-        { error: "Firebase storage not configured. Set NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET in .env.local" },
-        { status: 503 },
-      )
-    }
-
     const body = await request.json()
     const claimId = body?.claimId as string | undefined
     const type = (body?.type as "pdf" | "xml" | undefined) ?? "pdf"
@@ -51,8 +41,8 @@ export async function POST(request: NextRequest) {
         `patients/${patientId}/claims/claim-${claimId}.pdf`
     }
 
-    const bucketName = storageBucket || `${projectId}.appspot.com`
-    const bucket = admin.storage().bucket(bucketName)
+    // Use shared Admin storage helper to ensure bucket name is normalized correctly.
+    const bucket = await getAdminStorage()
     const file = bucket.file(storagePath)
 
     const [exists] = await file.exists()

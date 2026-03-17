@@ -442,7 +442,7 @@ export default function MedicalAidClaimDetailPage() {
     claim.mainMemberIdNumber ??
     patientInfo?.mainMemberIdNumber ??
     "—"
-  const doctorName = claim.createdByName ?? "Dr Winston Mkhonza"
+  const doctorName = claim.createdByName ?? "Reztek Healthcare Practice"
 
   return (
     <div className="space-y-6">

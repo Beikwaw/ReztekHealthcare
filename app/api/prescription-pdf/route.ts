@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       address: patient?.address as string | undefined,
       dateOfBirth: patient?.dateOfBirth as Date | string | undefined,
       patientNumber: patient?.patientNumber as string | undefined,
-      doctorName: (consultation.doctorName as string) || "Dr Winston Mkhonza",
+      doctorName: (consultation.doctorName as string) || "Reztek Healthcare Practice",
     }
 
     const scriptTextFromConsultation = (consultation.scriptText as string) || ""

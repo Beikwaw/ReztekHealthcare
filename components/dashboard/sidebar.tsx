@@ -29,6 +29,7 @@ import {
   Activity,
   Trash2,
 } from "lucide-react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
@@ -303,8 +304,15 @@ export function DashboardSidebar() {
     <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
       {/* Logo */}
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-3 lg:px-4">
-        <div className="flex shrink-0 items-center justify-center w-10 h-10 rounded-xl bg-primary">
-          <Heart className="w-5 h-5 text-primary-foreground" />
+        <div className="flex shrink-0 items-center justify-center">
+          <Image
+            src="/reztek-logo.png"
+            alt="Reztek Healthcare Practice"
+            width={120}
+            height={40}
+            className="h-8 w-auto object-contain"
+            priority
+          />
         </div>
         <div className="hidden flex-col min-w-0 lg:flex">
           <span className="font-semibold text-sm truncate">Reztek Healthcare Practice</span>

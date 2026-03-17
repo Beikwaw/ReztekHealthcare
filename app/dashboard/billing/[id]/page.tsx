@@ -190,9 +190,9 @@ export default function InvoiceDetailPage({
     }
     try {
       await generateInvoicePdf(invoice, patient ?? null)
-      const subject = encodeURIComponent(`Invoice ${String(invoice.id).toUpperCase()} - Dr. W.C. Mkhonza`)
+      const subject = encodeURIComponent(`Invoice ${String(invoice.id).toUpperCase()} - Reztek Healthcare Practice`)
       const body = encodeURIComponent(
-        `Dear ${patient?.name || "Patient"},\n\nPlease find your invoice attached.\n\nTotal Due: R ${invoice.total.toLocaleString()}\n\nThank you.\n\nDr. W.C. Mkhonza`
+        `Dear ${patient?.name || "Patient"},\n\nPlease find your invoice attached.\n\nTotal Due: R ${invoice.total.toLocaleString()}\n\nThank you.\n\nReztek Healthcare Practice`
       )
       window.location.href = `mailto:${patient.email}?subject=${subject}&body=${body}`
       toast.success("PDF downloaded. Your email client will open – attach the PDF and send.")
@@ -231,8 +231,8 @@ export default function InvoiceDetailPage({
             <div className="flex flex-col md:flex-row md:items-start gap-6 p-6">
               <div className="flex-shrink-0">
                 <Image
-                  src="/invoice-letterhead.png"
-                  alt="Dr. W.C. Mkhonza practice letterhead"
+                  src="/letterhead-full.png"
+                  alt="Reztek Healthcare Practice letterhead"
                   width={600}
                   height={200}
                   className="w-full max-w-sm h-auto object-contain rounded border border-border/50 print:max-w-[280px]"
@@ -240,21 +240,21 @@ export default function InvoiceDetailPage({
                 />
               </div>
               <div className="flex-1 grid gap-3 text-sm print:text-black">
-                <p className="text-lg font-bold text-foreground">DR. W.C. MKHONZA</p>
-                <p className="text-muted-foreground">B.Sc. Hons (Fort Hare) M.B Ch.B. (Medunsa) · Pr. No. 1557 149</p>
+                <p className="text-lg font-bold text-foreground">REZTEK HEALTHCARE PRACTICE</p>
+                <p className="text-muted-foreground">Comprehensive Primary Care · Pr. No. 0000000</p>
                 <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t border-border/50">
                   <div>
-                    <p className="font-semibold text-foreground">SURGERY</p>
-                    <p>2612 Hlophe Street, Bhekuzulu Location</p>
-                    <p>Vryheid 3100 · Tel/Fax 034 980 0800</p>
+                    <p className="font-semibold text-foreground">CLINIC</p>
+                    <p>123 Reztek Medical Centre, Central District</p>
+                    <p>Johannesburg 2000 · Tel 010 000 0000</p>
                   </div>
                   <div>
                     <p className="font-semibold text-foreground">MAIN PRACTICE</p>
-                    <p>Shop 13 Collero Centre, 241 Utrecht Street</p>
-                    <p>Vryheid 3100 · Tel: 034 980 2675 / 034 980 1250</p>
+                    <p>456 Health Avenue</p>
+                    <p>Johannesburg 2000 · Tel: 010 000 0001 / 010 000 0002</p>
                   </div>
                 </div>
-                <p className="text-muted-foreground">P.O. Box 10893, Vryheid 3100 · E-mail: winston.mkhonza@gmail.com</p>
+                <p className="text-muted-foreground">P.O. Box 1000, Johannesburg 2000 · E-mail: info@reztekhealth.example.com</p>
               </div>
             </div>
           </CardContent>

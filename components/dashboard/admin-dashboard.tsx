@@ -151,6 +151,38 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Link
+              href="/admin/leads"
+              className="flex items-center justify-between p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                  <Receipt className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Quote Requests</p>
+                  <p className="text-sm text-muted-foreground">View all quotes captured via get-quote</p>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            </Link>
+
+            <Link
+              href="/admin/demo-requests"
+              className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Demo Requests</p>
+                  <p className="text-sm text-muted-foreground">Review in-person demo bookings</p>
+                </div>
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
+            </Link>
+
+            <Link
               href="/dashboard/staff"
               className="flex items-center justify-between p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group"
             >

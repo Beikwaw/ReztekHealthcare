@@ -1,6 +1,6 @@
 /**
  * Shared parsing and PDF generation for consultation summaries.
- * PDF: official letterhead (Dr. W.C. Mkhonza) at top, then patient details, summary, diagnosis, bill.
+ * PDF: official letterhead (Reztek Healthcare Practice) at top, then patient details, summary, diagnosis, bill.
  * All config from process.env (Next.js loads .env.local); no .env.example used at runtime.
  */
 

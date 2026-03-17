@@ -13,7 +13,7 @@ function getEmailLogoUrl(request: NextRequest): string {
   const envLogo = process.env.EMAIL_LOGO_URL
   if (envLogo && envLogo.trim()) return envLogo.trim()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
-  const path = "/reztek-logo.png"
+  const path = "/reztek-logo.svg"
   if (siteUrl && siteUrl.trim()) return `${siteUrl.replace(/\/+$/, "")}${path}`
   const host = request.headers.get("x-forwarded-host")
   const proto = request.headers.get("x-forwarded-proto") || "https"
@@ -56,13 +56,13 @@ function toSafeJsDate(value: unknown, fallback: Date = new Date()): Date {
 
 function buildBaseHeader(logoUrl: string): string {
   const practiceContacts = {
-    name: "DR WC MKHONZA HEALTH PRACTICE",
+    name: "REZTEK HEALTHCARE PRACTICE",
     main: {
-      address: "Shop 13 Collero Centre, 241 Utrecht Street, Vryheid 3100",
-      tel1: "Tel: 034 980 2675",
-      tel2: "034 980 1250",
+      address: "123 Reztek Medical Centre, Central District, Johannesburg 2000",
+      tel1: "Tel: 010 000 0001",
+      tel2: "010 000 0002",
     },
-    email: "winston.mkhonza@gmail.com",
+    email: "info@reztekhealth.example.com",
   }
 
   return `
@@ -322,7 +322,7 @@ export async function POST(request: NextRequest) {
     const doctorName =
       typeof claim.createdByName === "string" && claim.createdByName.trim()
         ? (claim.createdByName as string)
-        : "Dr WC Mkhonza"
+        : "Reztek Healthcare Practice"
 
     const amountsHtml = `
       <table style="width:100%; border-collapse: collapse; margin-top: 16px;">
@@ -457,8 +457,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error("[medical-aid-claim-outcome] Resend error:", error)
-      return NextResponse.json({ error: error.message || "Failed to send email" }, { status: 502 })
+      // Do not block claim completion if email fails – log and return success with flag.
+      console.error("[medical-aid-claim-outcome] Resend error (email will not be sent, but outcome recorded):", error)
+      return NextResponse.json({ ok: true, invoiceId, emailError: error.message || "Failed to send email" })
     }
 
     return NextResponse.json({ ok: true, invoiceId })
