@@ -94,6 +94,7 @@ export async function getQuotePdfBuffer(lead: DoctorLeadStored): Promise<ArrayBu
       ["Number of Healthcare professionals", String(lead.doctors ?? 0)],
       ["Number of Staff", String(lead.staff ?? 0)],
       ["Average Patients Per Day", String(lead.patientsPerDay ?? 0)],
+      ["Average consultation time (minutes)", String(lead.averageConsultationMinutes ?? 20)],
       ["Years in Operation", String(lead.yearsInOperation ?? 0)],
       ["Uses a digital system?", String(lead.hasSystem ?? "No")],
       ["Current system", lead.currentSystem || "—"],
@@ -105,8 +106,7 @@ export async function getQuotePdfBuffer(lead: DoctorLeadStored): Promise<ArrayBu
   // Quote box – dynamic based on lead
   const doctorsCount = Number.isFinite(Number(lead.doctors)) ? Number(lead.doctors) : 0
   const patientsCount = Number.isFinite(Number(lead.patientsPerDay)) ? Number(lead.patientsPerDay) : 0
-  const extraPerProfessional = 300
-  const doctorsSurcharge = Math.max(0, doctorsCount) * extraPerProfessional
+  const doctorsSurcharge = doctorsCount >= 2 ? 350 : 0
   const highPatientSurcharge = patientsCount > 500 ? 350 : 0
   const monthlyTotal = QUOTE_PRICING.monthlyCostZar + doctorsSurcharge + highPatientSurcharge
 

@@ -1,6 +1,7 @@
 "use client"
 
 import { Bell, Menu } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -39,6 +40,9 @@ export function DashboardHeader() {
       </Sheet>
 
       <div className="flex items-center gap-2">
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/">Home</Link>
+        </Button>
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

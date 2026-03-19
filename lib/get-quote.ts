@@ -62,6 +62,7 @@ export const doctorLeadSchema = z.object({
   doctors: z.coerce.number().int().min(0).optional().default(0),
   staff: z.coerce.number().int().min(0).optional().default(0),
   patientsPerDay: z.coerce.number().int().min(0).optional().default(0),
+  averageConsultationMinutes: z.coerce.number().int().min(1).optional().default(20),
   yearsInOperation: z.coerce.number().int().min(0).optional().default(0),
 
   hasSystem: z.enum(["Yes", "No"]).default("No"),
@@ -112,6 +113,28 @@ export const OUTCOME_BENEFITS: string[] = [
   "Centralized and secure patient records",
   "AI-assisted clinical support",
 ]
+
+export const INCLUDED_FEATURE_DESCRIPTIONS: Record<string, string> = {
+  "Secure Cloud Hosting": "Keeps your practice data available, encrypted, and accessible securely from any approved location.",
+  "System Deployment & Maintenance": "Reztek handles setup, updates, and ongoing maintenance so your team stays focused on patients.",
+  "System Administration Support": "Get support for user setup, permissions, and day-to-day administration tasks.",
+  "Advanced Security & Data Protection": "Protects sensitive healthcare records with security controls aligned to healthcare data standards.",
+  "AI (clinical artificail intellegence)": "Provides intelligent assistance to reduce repetitive admin and support faster clinical workflows.",
+  "Patient Management System": "Centralizes patient profiles, visits, billing context, and related operational information.",
+  "Access to patient records": "Enables fast retrieval of patient history and documentation when and where you need it.",
+  "Appointment Scheduling System": "Helps your team schedule, track, and manage appointments with less manual coordination.",
+  "Complete Medical Aid Claim and billing Integration": "Supports streamlined claims and billing workflows to reduce delays and revenue leakage.",
+  "Reporting & Analytics Dashboard": "Gives visibility into practice performance, workload, and operational trends for better decisions.",
+}
+
+export const OUTCOME_BENEFIT_DESCRIPTIONS: Record<string, string> = {
+  "Reduces consultation time from 20+ minutes to 10+ minutes": "By automating admin and surfacing key data quickly, clinicians spend less time on non-clinical steps.",
+  "Speeds up medical aid claims and billing": "Standardized data capture and integrated billing flows reduce rework and submission delays.",
+  "Allows doctors to see more patients per day": "Shorter consultation cycles and less admin overhead increase practical daily patient capacity.",
+  "Reduces administrative workload": "Removes manual duplication across records, scheduling, and billing operations.",
+  "Centralized and secure patient records": "All relevant patient information is organized in one secure system for faster access.",
+  "AI-assisted clinical support": "Actionable prompts and summaries support consistent documentation and operational efficiency.",
+}
 
 export const DATA_SECURITY_NOTICE =
   "All patient and practice data is highly protected, securely stored, and handled with strict confidentiality in compliance with healthcare data standards."

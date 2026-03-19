@@ -10,7 +10,9 @@ import {
   CONTACT_DETAILS,
   DATA_SECURITY_NOTICE,
   INCLUDED_FEATURES,
+  INCLUDED_FEATURE_DESCRIPTIONS,
   OUTCOME_BENEFITS,
+  OUTCOME_BENEFIT_DESCRIPTIONS,
   QUOTE_PRICING,
   type DoctorLeadStored,
 } from "@/lib/get-quote"
@@ -26,17 +28,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CalendarDays, Download, MapPin } from "lucide-react"
 
 type LeadResponse = { lead: DoctorLeadStored }
-type UploadResponse = {
-  uploaded: Array<{
-    id: string
-    filename: string
-    contentType: string
-    size: number
-    storagePath: string
-    signedUrl?: string
-  }>
-}
-
 export default function GetQuoteResultClient() {
   const search = useSearchParams()
   const leadId = search.get("leadId") || ""
@@ -44,8 +35,6 @@ export default function GetQuoteResultClient() {
   const [lead, setLead] = useState<DoctorLeadStored | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>("")
-
-  const demoVideoUrl = process.env.NEXT_PUBLIC_GET_QUOTE_DEMO_VIDEO_URL || ""
 
   const [demoOpen, setDemoOpen] = useState(false)
   const [demoSubmitting, setDemoSubmitting] = useState(false)
@@ -56,11 +45,8 @@ export default function GetQuoteResultClient() {
   const [time, setTime] = useState("")
   const [address, setAddress] = useState("")
 
-  const [uploading, setUploading] = useState(false)
-  const [uploadError, setUploadError] = useState<string>("")
-  const [uploadedFiles, setUploadedFiles] = useState<UploadResponse["uploaded"]>([])
-
-  const extraPerProfessional = 300
+  const [selectedFeature, setSelectedFeature] = useState<string>("")
+  const [selectedOutcome, setSelectedOutcome] = useState<string>("")
 
   const billing = useMemo(() => {
     if (!lead) {
@@ -74,11 +60,11 @@ export default function GetQuoteResultClient() {
     }
     const doctorsCount = Number.isFinite(Number(lead.doctors)) ? Number(lead.doctors) : 0
     const patientsCount = Number.isFinite(Number(lead.patientsPerDay)) ? Number(lead.patientsPerDay) : 0
-    const doctorsSurcharge = Math.max(0, doctorsCount) * extraPerProfessional
+    const doctorsSurcharge = doctorsCount >= 2 ? 350 : 0
     const highPatientSurcharge = patientsCount > 500 ? 350 : 0
     const monthlyTotal = QUOTE_PRICING.monthlyCostZar + doctorsSurcharge + highPatientSurcharge
     return { doctorsCount, patientsCount, doctorsSurcharge, highPatientSurcharge, monthlyTotal }
-  }, [lead, extraPerProfessional])
+  }, [lead])
 
   useEffect(() => {
     let cancelled = false
@@ -116,27 +102,6 @@ export default function GetQuoteResultClient() {
     return `/api/get-quote/pdf?leadId=${encodeURIComponent(leadId)}`
   }, [leadId])
 
-  async function uploadFiles(list: FileList | null) {
-    if (!leadId) return
-    if (!list || list.length === 0) return
-    setUploading(true)
-    setUploadError("")
-    const fd = new FormData()
-    fd.append("leadId", leadId)
-    Array.from(list).forEach((f) => fd.append("files", f))
-
-    const res = await fetch("/api/get-quote/upload", { method: "POST", body: fd })
-    if (!res.ok) {
-      const payload = (await res.json().catch(() => null)) as { error?: string } | null
-      setUploadError(payload?.error || "Could not upload files. Please try again.")
-      setUploading(false)
-      return
-    }
-    const data = (await res.json()) as UploadResponse
-    setUploadedFiles((prev) => [...data.uploaded, ...prev])
-    setUploading(false)
-  }
-
   async function submitDemoRequest() {
     if (!lead) return
     setDemoSubmitting(true)
@@ -157,7 +122,11 @@ export default function GetQuoteResultClient() {
     })
     if (!res.ok) {
       const payload = (await res.json().catch(() => null)) as { error?: string } | null
-      setDemoError(payload?.error || "Could not submit your demo request. Please try again.")
+      const message = payload?.error || "Could not submit your demo request. Please try again."
+      setDemoError(message)
+      if (typeof window !== "undefined") {
+        window.alert(`Demo request failed: ${message}`)
+      }
       setDemoSubmitting(false)
       return
     }
@@ -301,103 +270,40 @@ export default function GetQuoteResultClient() {
                 <CardContent className="space-y-6">
                   <div className="grid gap-3 sm:grid-cols-2">
                     {INCLUDED_FEATURES.map((b) => (
-                      <div
+                      <button
+                        type="button"
                         key={b}
+                        onClick={() => setSelectedFeature((prev) => (prev === b ? "" : b))}
                         className="rounded-xl border border-border bg-card p-4 shadow-sm"
                       >
                         <p className="text-sm font-medium">{b}</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
+                  {selectedFeature ? (
+                    <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm">
+                      {INCLUDED_FEATURE_DESCRIPTIONS[selectedFeature] || "Description unavailable."}
+                    </div>
+                  ) : null}
 
                   <Separator />
 
                   <div className="grid gap-3">
                     {OUTCOME_BENEFITS.map((b) => (
-                      <div key={b} className="flex items-start gap-3">
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => setSelectedOutcome((prev) => (prev === b ? "" : b))}
+                        className="flex items-start gap-3 text-left"
+                      >
                         <div className="mt-1 h-2 w-2 rounded-full bg-accent" />
                         <p className="text-sm text-foreground/90">{b}</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Visual demonstration</CardTitle>
-                  <CardDescription>Watch a short walkthrough of the platform.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {demoVideoUrl ? (
-                    <div className="overflow-hidden rounded-2xl border border-border bg-black">
-                      <video
-                        controls
-                        preload="metadata"
-                        className="h-auto w-full"
-                        src={demoVideoUrl}
-                      />
-                    </div>
-                  ) : (
-                    <Alert>
-                      <AlertDescription>
-                        Demo video is not configured yet. Set{" "}
-                        <span className="font-mono">NEXT_PUBLIC_GET_QUOTE_DEMO_VIDEO_URL</span>{" "}
-                        to a public video URL.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upload documents</CardTitle>
-                  <CardDescription>
-                    Add any supporting documents and files. These are stored securely in Firebase.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {uploadError ? (
-                    <Alert variant="destructive">
-                      <AlertDescription>{uploadError}</AlertDescription>
-                    </Alert>
-                  ) : null}
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="leadUpload">Select files</Label>
-                    <Input
-                      id="leadUpload"
-                      type="file"
-                      multiple
-                      disabled={!leadId || uploading}
-                      onChange={(e) => void uploadFiles(e.target.files)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Uploads are linked to this quote request ID: <span className="font-mono">{leadId || "—"}</span>
-                    </p>
-                  </div>
-
-                  {uploadedFiles.length > 0 ? (
-                    <div className="rounded-2xl border border-border bg-muted/20 p-4">
-                      <p className="text-sm font-semibold">Uploaded</p>
-                      <ul className="mt-2 space-y-2 text-sm">
-                        {uploadedFiles.map((f) => (
-                          <li key={f.id} className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="truncate font-medium">{f.filename}</p>
-                              <p className="text-xs text-muted-foreground truncate">{f.storagePath}</p>
-                            </div>
-                            {f.signedUrl ? (
-                              <a className="text-xs underline" href={f.signedUrl} target="_blank" rel="noreferrer">
-                                Open
-                              </a>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Saved</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
+                  {selectedOutcome ? (
+                    <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm">
+                      {OUTCOME_BENEFIT_DESCRIPTIONS[selectedOutcome] || "Description unavailable."}
                     </div>
                   ) : null}
                 </CardContent>
@@ -445,7 +351,7 @@ export default function GetQuoteResultClient() {
                       <span>R{QUOTE_PRICING.monthlyCostZar.toLocaleString("en-ZA")}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4 text-sm">
-                      <span>{`Healthcare professionals (${billing.doctorsCount} × R${extraPerProfessional})`}</span>
+                      <span>{`Healthcare professionals (${billing.doctorsCount})`}</span>
                       <span>R{billing.doctorsSurcharge.toLocaleString("en-ZA")}</span>
                     </div>
                     <div className="flex items-center justify-between gap-4 text-sm">
@@ -479,6 +385,11 @@ export default function GetQuoteResultClient() {
                       <CalendarDays className="h-4 w-4 mr-2" />
                       Request In-Person Demo
                     </Button>
+                    <Link href="/">
+                      <Button variant="ghost" className="w-full">
+                        Go to home page
+                      </Button>
+                    </Link>
                     <a href={pdfHref} className="block">
                       <Button variant="outline" className="w-full">
                         <Download className="h-4 w-4 mr-2" />
@@ -553,8 +464,7 @@ export default function GetQuoteResultClient() {
                   </p>
                   <p className="text-sm">
                     <span className="text-muted-foreground">Phone:</span>{" "}
-                    <a className="font-medium
- hover:underline" href={`tel:${CONTACT_DETAILS.phone}`}>
+                    <a className="font-medium hover:underline" href={`tel:${CONTACT_DETAILS.phone}`}>
                       {CONTACT_DETAILS.phone}
                     </a>
                   </p>

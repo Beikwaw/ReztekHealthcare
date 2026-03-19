@@ -26,37 +26,43 @@ function buildAiPrompt(input: {
   practiceName: string
   practiceType: string
   specialization: string
+  location?: string
   doctors?: number
   staff?: number
   patientsPerDay?: number
+  averageConsultationMinutes?: number
   yearsInOperation?: number
   hasSystem: string
   currentSystem?: string
 }) {
-  return `You are writing a short professional onboarding summary for a medical practice evaluating a healthcare SaaS platform.
+  return `You are writing a short persuasive onboarding summary for a medical practice evaluating Reztek's healthcare SaaS platform.
 
-Return exactly 1-2 sentences (max 45 words). No bullet points. No disclaimers. No "AI" wording.
+Return exactly 2-3 sentences (max 85 words). No bullet points. No disclaimers. No "AI" wording.
 
 Practice:
 - Name: ${input.practiceName}
 - Type: ${input.practiceType}
 - Specialization: ${input.specialization}
+- Location: ${input.location || "Not provided"}
 - Doctors: ${input.doctors ?? 0}
 - Staff: ${input.staff ?? 0}
 - Avg patients/day: ${input.patientsPerDay ?? 0}
+- Avg consultation time (minutes): ${input.averageConsultationMinutes ?? 20}
 - Years operating: ${input.yearsInOperation ?? 0}
 - Uses digital system: ${input.hasSystem}${input.hasSystem === "Yes" && input.currentSystem ? ` (${input.currentSystem})` : ""}
 
-Focus on operational efficiency, admin workload reduction, patient turnaround, secure records, and billing/claims speed.`
+The summary must mention that consultation time can be cut by about half and that daily consultations can increase. Make it advert-style and explain why Reztek is needed based on healthcare professional count, patient volume, staff volume, location, and practice type.`
 }
 
 async function generatePracticeSummary(input: {
   practiceName: string
   practiceType: string
   specialization: string
+  location?: string
   doctors?: number
   staff?: number
   patientsPerDay?: number
+  averageConsultationMinutes?: number
   yearsInOperation?: number
   hasSystem: string
   currentSystem?: string
@@ -103,9 +109,14 @@ function renderEmailHtml(args: {
   name: string
   practiceName: string
   specialization: string
+  doctors: number
+  patientsPerDay: number
   aiSummary: string | null
 }) {
-  const monthly = `R${QUOTE_PRICING.monthlyCostZar.toLocaleString("en-ZA")}`
+  const doctorsSurcharge = args.doctors >= 2 ? 350 : 0
+  const highPatientSurcharge = args.patientsPerDay > 500 ? 350 : 0
+  const monthlyTotal = QUOTE_PRICING.monthlyCostZar + doctorsSurcharge + highPatientSurcharge
+  const monthly = `R${monthlyTotal.toLocaleString("en-ZA")}`
   const setup = `R${QUOTE_PRICING.setupFeeZar.toLocaleString("en-ZA")}`
 
   const featureList = INCLUDED_FEATURES.map((x) => `<li style="margin:6px 0;">${x}</li>`).join("")
@@ -198,9 +209,11 @@ export async function POST(request: NextRequest) {
         practiceName: input.practiceName,
         practiceType: input.practiceType,
         specialization: input.specialization,
+        location: input.location,
         doctors: input.doctors,
         staff: input.staff,
         patientsPerDay: input.patientsPerDay,
+        averageConsultationMinutes: input.averageConsultationMinutes,
         yearsInOperation: input.yearsInOperation,
         hasSystem: input.hasSystem,
         currentSystem: input.currentSystem,
@@ -221,6 +234,8 @@ export async function POST(request: NextRequest) {
         name: input.name,
         practiceName: input.practiceName,
         specialization: input.specialization,
+        doctors: input.doctors ?? 0,
+        patientsPerDay: input.patientsPerDay ?? 0,
         aiSummary,
       })
       await sendEmail(input.email, "Your Reztek quote & next steps", html)

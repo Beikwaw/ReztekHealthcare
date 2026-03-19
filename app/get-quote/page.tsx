@@ -30,6 +30,7 @@ type SubmitResponse = { leadId: string }
 export default function GetQuotePage() {
   const router = useRouter()
   const [serverError, setServerError] = useState<string>("")
+  const demoVideoUrl = process.env.NEXT_PUBLIC_GET_QUOTE_DEMO_VIDEO_URL || ""
 
   const defaults = useMemo<DoctorLeadInput>(
     () => ({
@@ -45,6 +46,7 @@ export default function GetQuotePage() {
       doctors: 0,
       staff: 0,
       patientsPerDay: 0,
+      averageConsultationMinutes: 20,
       yearsInOperation: 0,
       hasSystem: "No",
       currentSystem: "",
@@ -61,17 +63,7 @@ export default function GetQuotePage() {
 
   const hasSystem = form.watch("hasSystem")
   const practiceCountry = form.watch("practiceCountry")
-  const watchedDoctors = form.watch("doctors")
-  const watchedPatients = form.watch("patientsPerDay")
-
-  const doctorsCount = Number.isFinite(Number(watchedDoctors)) ? Number(watchedDoctors) : 0
-  const patientsCount = Number.isFinite(Number(watchedPatients)) ? Number(watchedPatients) : 0
-
-  const extraPerProfessional = 300
-  const doctorsSurcharge = Math.max(0, doctorsCount) * extraPerProfessional
-  const highPatientSurcharge = patientsCount > 500 ? 350 : 0
-  const monthlyTotal = QUOTE_PRICING.monthlyCostZar + doctorsSurcharge + highPatientSurcharge
-
+  const patientsCount = form.watch("patientsPerDay") ?? 0
   async function onSubmit(values: DoctorLeadInput) {
     setServerError("")
     const res = await fetch("/api/get-quote/submit", {
@@ -82,7 +74,11 @@ export default function GetQuotePage() {
 
     if (!res.ok) {
       const payload = (await res.json().catch(() => null)) as { error?: string } | null
-      setServerError(payload?.error || "We could not submit your request. Please try again.")
+      const message = payload?.error || "We could not submit your request. Please try again."
+      setServerError(message)
+      if (typeof window !== "undefined") {
+        window.alert(`Quote request failed: ${message}`)
+      }
       return
     }
 
@@ -139,25 +135,17 @@ export default function GetQuotePage() {
               </div>
 
               <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-5 text-white/90">
-                <p className="text-xs tracking-wide text-white/70">ESTIMATED MONTHLY COST</p>
-                <p className="mt-2 text-3xl font-semibold tracking-tight">
-                  R{monthlyTotal.toLocaleString("en-ZA")}
-                  <span className="ml-2 text-base font-medium text-white/70">/ month</span>
-                </p>
-                <div className="mt-3 space-y-1 text-sm text-white/75">
-                  <div className="flex items-center justify-between gap-4">
-                    <span>Base package</span>
-                    <span>R{QUOTE_PRICING.monthlyCostZar.toLocaleString("en-ZA")}</span>
+                <h3 className="text-sm font-semibold">Visual demonstration</h3>
+                <p className="mt-1 text-xs text-white/70">Watch a short walkthrough before generating your quote.</p>
+                {demoVideoUrl ? (
+                  <div className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-black">
+                    <video controls preload="metadata" className="h-auto w-full" src={demoVideoUrl} />
                   </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span>{`Healthcare professionals (${Math.max(0, doctorsCount)} × R${extraPerProfessional})`}</span>
-                    <span>R{doctorsSurcharge.toLocaleString("en-ZA")}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-4">
-                    <span>High patient volume (&gt; 500)</span>
-                    <span>R{highPatientSurcharge.toLocaleString("en-ZA")}</span>
-                  </div>
-                </div>
+                ) : (
+                  <p className="mt-2 text-xs text-white/70">
+                    Demo video URL is not configured. Set <span className="font-mono">NEXT_PUBLIC_GET_QUOTE_DEMO_VIDEO_URL</span>.
+                  </p>
+                )}
               </div>
             </div>
 
@@ -351,6 +339,16 @@ export default function GetQuotePage() {
                         <div className="space-y-2">
                           <Label htmlFor="yearsInOperation">Years in Operation</Label>
                           <Input id="yearsInOperation" type="number" min={0} inputMode="numeric" {...form.register("yearsInOperation")} />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label htmlFor="averageConsultationMinutes">Average consultation time (minutes)</Label>
+                          <Input
+                            id="averageConsultationMinutes"
+                            type="number"
+                            min={1}
+                            inputMode="numeric"
+                            {...form.register("averageConsultationMinutes")}
+                          />
                         </div>
                       </div>
                     </section>

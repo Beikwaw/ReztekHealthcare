@@ -47,6 +47,9 @@ export default function MedicalAidLayout({ children }: { children: React.ReactNo
           </div>
 
           <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/">Home</Link>
+            </Button>
             <Button asChild variant={pathname === "/medical-aid/dashboard" ? "secondary" : "ghost"} size="sm">
               <Link href="/medical-aid/dashboard">Dashboard</Link>
             </Button>
