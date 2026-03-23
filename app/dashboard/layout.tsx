@@ -5,9 +5,11 @@ import { usePathname, useRouter } from "next/navigation"
 
 import { useAuth } from "@/lib/auth-context"
 import { DataProvider } from "@/lib/data-context"
+import { PageTransition } from "@/components/animations/page-transition"
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { DashboardHeader } from "@/components/dashboard/header"
 import { DashboardBottomNav } from "@/components/dashboard/bottom-nav"
+import { FullPageLoading } from "@/components/feedback/full-page-loading"
 
 export default function DashboardLayout({
   children,
@@ -38,11 +40,7 @@ export default function DashboardLayout({
   }, [isAuthenticated, isLoading, user, pathname, router])
 
   if (isLoading || !isAuthenticated || !user || user.role === "patient") {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    )
+    return <FullPageLoading text="Reztek Dashboard" />
   }
 
   if (user.role === "medical-aid") {
@@ -64,8 +62,10 @@ export default function DashboardLayout({
         {/* Main Content - single page scroll */}
         <div className="flex flex-1 flex-col min-w-0">
           <DashboardHeader />
-          <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6 animate-in fade-in duration-200">
-            {children}
+          <main className="flex-1 p-4 pb-20 lg:p-6 lg:pb-6">
+            <PageTransition transitionKey={pathname} className="h-full">
+              {children}
+            </PageTransition>
           </main>
           <DashboardBottomNav role={user?.role} />
         </div>

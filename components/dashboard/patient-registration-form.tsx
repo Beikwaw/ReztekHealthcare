@@ -19,8 +19,10 @@ import { usePatients } from "@/lib/firestore-hooks"
 import { useAuth } from "@/lib/auth-context"
 import { addPatientAuditLog } from "@/lib/firebase"
 import { StatusDialog } from "@/components/ui/status-dialog"
-import { toast } from "sonner"
-import { UserPlus, Loader2, Plus, Trash2 } from "lucide-react"
+import { LoadingButton } from "@/components/feedback/loading-button"
+import { OverlaySpinner } from "@/components/feedback/overlay-spinner"
+import { notifyError, notifySuccess, withLoadingToast } from "@/lib/toast-utils"
+import { UserPlus, Plus, Trash2 } from "lucide-react"
 import { MEDICAL_AID_SCHEMES } from "@/lib/medical-aid-schemes"
 
 const HOME_LANGUAGE_OPTIONS = ["Zulu", "English", "Afrikaans"]
@@ -319,11 +321,13 @@ export function PatientRegistrationForm() {
         return
       }
 
-      const createdPatient = await addPatient({
-        ...formData,
-        gender: (formData.gender || "other") as "male" | "female" | "other",
-        status: "waiting",
-      })
+      const createdPatient = await withLoadingToast("Saving record...", async () =>
+        addPatient({
+          ...formData,
+          gender: (formData.gender || "other") as "male" | "female" | "other",
+          status: "waiting",
+        })
+      )
 
       if (user) {
         await addPatientAuditLog({
@@ -338,11 +342,12 @@ export function PatientRegistrationForm() {
         })
       }
 
-      toast.success("Patient registered successfully.")
+      notifySuccess("recordCreated")
       router.push(`/dashboard?postRegistration=${createdPatient.id}`)
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to register patient"
       setError(message)
+      notifyError("firebaseWriteFailed", message)
       setStatusDialogTitle("Registration Error")
       setStatusDialogDescription(message)
       setStatusDialogOpen(true)
@@ -359,7 +364,8 @@ export function PatientRegistrationForm() {
   }, [error])
 
   return (
-    <Card className="max-w-5xl mx-auto border-border/50 overflow-visible">
+    <Card className="relative max-w-5xl mx-auto border-border/50 overflow-visible">
+      <OverlaySpinner show={loading} label="Submitting patient..." />
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <UserPlus className="w-5 h-5" />
@@ -683,19 +689,10 @@ export function PatientRegistrationForm() {
           </div>
 
           <div className="flex gap-3 pt-4 border-t">
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Registering...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Register Patient & Add to Waiting List
-                </>
-              )}
-            </Button>
+            <LoadingButton type="submit" isLoading={loading} loadingText="Registering..." className="flex-1">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Register Patient & Add to Waiting List
+            </LoadingButton>
           </div>
         </form>
       </CardContent>

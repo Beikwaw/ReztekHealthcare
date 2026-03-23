@@ -4,6 +4,9 @@ import { useState } from "react"
 import Link from "next/link"
 import { useData } from "@/lib/data-context"
 import { Button } from "@/components/ui/button"
+import { FadeIn } from "@/components/animations/fade-in"
+import { LoadingButton } from "@/components/feedback/loading-button"
+import { TableSkeleton } from "@/components/feedback/skeletons"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -54,15 +57,15 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { usePatients, useAppointments, useDeletionRequests } from "@/lib/firestore-hooks"
 import { Clock } from "lucide-react"
-import { toast } from "sonner"
 import { addPatientAuditLog } from "@/lib/firebase"
+import { notifyError, notifySuccess, withLoadingToast } from "@/lib/toast-utils"
 
 export default function PatientsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
   const { patients: contextPatients } = useData()
-  const { patients, updatePatient: updatePatientStatus } = usePatients()
+  const { patients, loading: patientsLoading, updatePatient: updatePatientStatus } = usePatients()
   const { appointments } = useAppointments()
   const { createDeletionRequest } = useDeletionRequests()
   const [searchQuery, setSearchQuery] = useState("")
@@ -74,6 +77,7 @@ export default function PatientsPage() {
 
   // Use Firestore patients if available, otherwise fall back to context
   const allPatients = patients.length > 0 ? patients : contextPatients
+  const showTableSkeleton = patientsLoading && allPatients.length === 0
 
   const normalizedQuery = searchQuery.trim().toLowerCase()
   const filteredPatients = allPatients.filter((patient) => {
@@ -122,22 +126,24 @@ export default function PatientsPage() {
     if (!patientForWaitingDialog || !user) return
     setSendToWaitingLoading(true)
     try {
-      await updatePatientStatus(patientForWaitingDialog.id, { status: "waiting" })
-      await addPatientAuditLog({
-        patientId: patientForWaitingDialog.id,
-        patientName: patientForWaitingDialog.name,
-        action: "status-change",
-        fromStatus: patientForWaitingDialog.status,
-        toStatus: "waiting",
-        performedByUserId: user.id,
-        performedByName: user.name,
-        performedByRole: user.role,
+      await withLoadingToast("Updating patient status...", async () => {
+        await updatePatientStatus(patientForWaitingDialog.id, { status: "waiting" })
+        await addPatientAuditLog({
+          patientId: patientForWaitingDialog.id,
+          patientName: patientForWaitingDialog.name,
+          action: "status-change",
+          fromStatus: patientForWaitingDialog.status,
+          toStatus: "waiting",
+          performedByUserId: user.id,
+          performedByName: user.name,
+          performedByRole: user.role,
+        })
       })
-      toast.success("Patient sent to waiting list successfully.")
+      notifySuccess("recordUpdated")
       setPatientForWaitingDialog(null)
     } catch (error) {
       console.error("Error sending patient to waiting list:", error)
-      toast.error("Failed to send patient to waiting list.")
+      notifyError("apiFailed")
     } finally {
       setSendToWaitingLoading(false)
     }
@@ -148,25 +154,27 @@ export default function PatientsPage() {
     if (user.role !== "clerk") return
     setRequestDeletionLoading(true)
     try {
-      await createDeletionRequest({
-        patientId: patientToRequestDeletion.id,
-        patientName: patientToRequestDeletion.name,
-        requestedByUserId: user.id,
-        requestedByName: user.name,
-      })
-      toast.success("Deletion request submitted. An admin will review and approve.")
+      await withLoadingToast("Submitting deletion request...", async () =>
+        createDeletionRequest({
+          patientId: patientToRequestDeletion.id,
+          patientName: patientToRequestDeletion.name,
+          requestedByUserId: user.id,
+          requestedByName: user.name,
+        })
+      )
+      notifySuccess("recordDeleted", "Deletion request submitted for admin approval.")
       setPatientToRequestDeletion(null)
       setRequestDeletionDialogOpen(false)
     } catch (error) {
       console.error("Failed to submit deletion request:", error)
-      toast.error("Failed to submit deletion request. Please try again.")
+      notifyError("firebaseWriteFailed")
     } finally {
       setRequestDeletionLoading(false)
     }
   }
 
   return (
-    <div className="space-y-6">
+    <FadeIn className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Patients</h1>
@@ -201,119 +209,123 @@ export default function PatientsPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Patient Number</TableHead>
-                  <TableHead className="hidden md:table-cell">Age/Gender</TableHead>
-                  <TableHead className="hidden sm:table-cell">Contact</TableHead>
-                  <TableHead className="hidden lg:table-cell">Last Visit</TableHead>
-                  <TableHead className="hidden lg:table-cell">Insurance</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPatients.length === 0 ? (
+          {showTableSkeleton ? (
+            <TableSkeleton rows={7} columns={7} />
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      {searchQuery ? "No patients found matching your search" : "No patients registered yet"}
-                    </TableCell>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden md:table-cell">Patient Number</TableHead>
+                    <TableHead className="hidden md:table-cell">Age/Gender</TableHead>
+                    <TableHead className="hidden sm:table-cell">Contact</TableHead>
+                    <TableHead className="hidden lg:table-cell">Last Visit</TableHead>
+                    <TableHead className="hidden lg:table-cell">Insurance</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredPatients.map((patient) => (
-                    <TableRow key={patient.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{patient.name}</p>
-                          <p className="text-xs text-muted-foreground md:hidden">
-                            {patient.patientNumber || patient.idNumber || patient.id}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell font-mono text-sm">
-                        {patient.patientNumber || patient.idNumber || patient.id}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {getAge(patient.dateOfBirth)} yrs, {patient.gender}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell">
-                        <div className="text-sm">
-                          <p>{patient.phone}</p>
-                          <p className="text-muted-foreground text-xs">{patient.email}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {getLastVisit(patient)}
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell">
-                        {patient.insuranceInfo ? (
-                          <Badge variant="secondary">{patient.insuranceInfo.provider}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">None</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">Actions</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/patients/${patient.id}`}>
-                                <Eye className="mr-2 h-4 w-4" />
-                                {user?.role === "clerk" ? "View Details & Billing" : "View Details"}
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/patients/${patient.id}/edit`}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Patient
-                              </Link>
-                            </DropdownMenuItem>
-                            {user?.role === "clerk" && (
-                              <DropdownMenuItem onClick={() => setPatientForWaitingDialog(patient)}>
-                                <Clock className="mr-2 h-4 w-4" />
-                                Send to Waiting List
-                              </DropdownMenuItem>
-                            )}
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/appointments/new?patient=${patient.id}`}>
-                                <CalendarPlus className="mr-2 h-4 w-4" />
-                                Book Appointment
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem asChild>
-                              <Link href={`/dashboard/billing/new?patient=${patient.id}`}>
-                                <FileText className="mr-2 h-4 w-4" />
-                                Create Invoice
-                              </Link>
-                            </DropdownMenuItem>
-                            {user?.role === "clerk" && (
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => {
-                                  setPatientToRequestDeletion(patient)
-                                  setRequestDeletionDialogOpen(true)
-                                }}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Request deletion
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {filteredPatients.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        {searchQuery ? "No patients found matching your search" : "No patients registered yet"}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : (
+                    filteredPatients.map((patient) => (
+                      <TableRow key={patient.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{patient.name}</p>
+                            <p className="text-xs text-muted-foreground md:hidden">
+                              {patient.patientNumber || patient.idNumber || patient.id}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell font-mono text-sm">
+                          {patient.patientNumber || patient.idNumber || patient.id}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {getAge(patient.dateOfBirth)} yrs, {patient.gender}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div className="text-sm">
+                            <p>{patient.phone}</p>
+                            <p className="text-muted-foreground text-xs">{patient.email}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {getLastVisit(patient)}
+                        </TableCell>
+                        <TableCell className="hidden lg:table-cell">
+                          {patient.insuranceInfo ? (
+                            <Badge variant="secondary">{patient.insuranceInfo.provider}</Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">None</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/patients/${patient.id}`}>
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  {user?.role === "clerk" ? "View Details & Billing" : "View Details"}
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/patients/${patient.id}/edit`}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Patient
+                                </Link>
+                              </DropdownMenuItem>
+                              {user?.role === "clerk" && (
+                                <DropdownMenuItem onClick={() => setPatientForWaitingDialog(patient)}>
+                                  <Clock className="mr-2 h-4 w-4" />
+                                  Send to Waiting List
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/appointments/new?patient=${patient.id}`}>
+                                  <CalendarPlus className="mr-2 h-4 w-4" />
+                                  Book Appointment
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link href={`/dashboard/billing/new?patient=${patient.id}`}>
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  Create Invoice
+                                </Link>
+                              </DropdownMenuItem>
+                              {user?.role === "clerk" && (
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() => {
+                                    setPatientToRequestDeletion(patient)
+                                    setRequestDeletionDialogOpen(true)
+                                  }}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Request deletion
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -333,13 +345,14 @@ export default function PatientsPage() {
             >
               Cancel
             </Button>
-            <Button
+            <LoadingButton
               variant="secondary"
               onClick={handleSendToWaitingOnly}
-              disabled={sendToWaitingLoading}
+              isLoading={sendToWaitingLoading}
+              loadingText="Sending..."
             >
-              {sendToWaitingLoading ? "Sending..." : "Send to Waiting Only"}
-            </Button>
+              Send to Waiting Only
+            </LoadingButton>
             <Button
               onClick={() => {
                 if (patientForWaitingDialog) {
@@ -366,16 +379,17 @@ export default function PatientsPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPatientToRequestDeletion(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+            <LoadingButton
               onClick={handleRequestDeletion}
-              disabled={requestDeletionLoading}
+              isLoading={requestDeletionLoading}
+              loadingText="Submitting..."
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {requestDeletionLoading ? "Submitting…" : "Request deletion"}
-            </AlertDialogAction>
+              Request deletion
+            </LoadingButton>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </FadeIn>
   )
 }

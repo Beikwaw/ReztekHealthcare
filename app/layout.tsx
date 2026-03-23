@@ -2,6 +2,7 @@ import React from "react"
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { AppToaster } from "@/components/feedback/app-toaster"
 import { AuthProvider } from '@/lib/auth-context'
 import './globals.css'
 
@@ -41,6 +42,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
+        <AppToaster />
         <Analytics />
       </body>
     </html>

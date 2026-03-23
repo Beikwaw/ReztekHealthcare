@@ -11,7 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react"
-import { toast } from "sonner"
+import { FadeIn } from "@/components/animations/fade-in"
+import { notifyError, notifySuccess, withLoadingToast } from "@/lib/toast-utils"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -26,12 +27,14 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    const result = await login(email, password)
+    const result = await withLoadingToast("Signing in...", async () => login(email, password))
     if (result.success) {
-      toast.success("Signed in successfully.")
+      notifySuccess("formSubmitted")
       router.push("/dashboard")
     } else {
-      setError(result.error || "Invalid email or password.")
+      const message = result.error || "Invalid email or password."
+      setError(message)
+      notifyError("apiFailed", message)
     }
   }
 
@@ -81,8 +84,9 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <Card className="border-border/60 shadow-sm">
-              <CardContent className="pt-6">
+            <FadeIn>
+              <Card className="border-border/60 shadow-sm">
+                <CardContent className="pt-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   {error && (
                     <Alert variant="destructive">
@@ -144,8 +148,9 @@ export default function LoginPage() {
                 </form>
 
                 {/* MFA step removed – all roles use email + password only */}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </FadeIn>
           </div>
 
           <div className="space-y-2">
