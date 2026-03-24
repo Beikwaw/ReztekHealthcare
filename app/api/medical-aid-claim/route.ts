@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { Timestamp } from "firebase-admin/firestore"
+import { apiErrorResponse } from "@/lib/errors"
 import { getAdminFirestore, getFirebaseAdmin } from "@/lib/firebase-admin"
 import { parseSummaryAndDiagnosis } from "@/lib/consultation-summary-pdf"
 import { getMedicalAidConsultationPdfBuffer } from "@/lib/medical-aid-consultation-pdf"
@@ -417,11 +418,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ claimId, url: signedPdfUrl, xmlUrl: signedXmlUrl })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to create medical aid claim"
-    console.error("[medical-aid-claim] Error:", msg, e)
-    return NextResponse.json(
-      { error: msg },
-      { status: 500 }
-    )
+    return apiErrorResponse(e, "medical-aid-claim")
   }
 }

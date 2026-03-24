@@ -14,13 +14,15 @@ import { ArrowLeft, Stethoscope, Save, AlertCircle, Sparkles, CheckCircle2, Chev
 import { toast } from "sonner"
 import { useAuth } from "@/lib/auth-context"
 import { useConsultations } from "@/lib/firestore-hooks"
-import type { Patient } from "@/lib/types"
+import type { Consultation, Patient } from "@/lib/types"
 import {
   GENERAL_HEALTH_QUESTIONNAIRE,
   getCategoryById,
   flattenSelectedSymptoms,
 } from "@/lib/general-health-questionnaire"
 import { parseSummaryAndDiagnosis } from "@/lib/consultation-summary-pdf"
+import { getSafeClientErrorMessage } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { deepOmitUndefined } from "@/lib/utils"
 import { addPatientAuditLog, updatePatient, addConsultation as addConsultationDirect } from "@/lib/firebase"
 
@@ -458,7 +460,7 @@ export function ConsultationForm({
       router.push(`/dashboard/consultations/${consultationId}`)
     } catch (error) {
       console.error("Error creating consultation:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to start consultation")
+      toast.error(getSafeClientErrorMessage(error, ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }

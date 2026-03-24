@@ -30,6 +30,8 @@ import {
 } from "lucide-react"
 import type { InvoiceStatus } from "@/lib/types"
 import { toast } from "sonner"
+import { getSafeClientErrorMessage } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { generateInvoicePdf } from "@/lib/invoice-pdf"
 import Image from "next/image"
 import { FileDown } from "lucide-react"
@@ -179,7 +181,7 @@ export default function InvoiceDetailPage({
       await generateInvoicePdf(invoice, patient ?? null)
       toast.success("PDF downloaded")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to generate PDF")
+      toast.error(getSafeClientErrorMessage(err, ERROR_MESSAGES.PDF_GENERATION_FAILED))
     }
   }
 
@@ -197,7 +199,7 @@ export default function InvoiceDetailPage({
       window.location.href = `mailto:${patient.email}?subject=${subject}&body=${body}`
       toast.success("PDF downloaded. Your email client will open – attach the PDF and send.")
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to generate PDF")
+      toast.error(getSafeClientErrorMessage(err, ERROR_MESSAGES.PDF_GENERATION_FAILED))
     }
   }
 

@@ -201,7 +201,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(result)
-  } catch {
+  } catch (e) {
+    console.error("[consultation-triage] Unexpected error (returning empty suggestions):", e)
     // On any unexpected error, fail safely with empty suggestions.
     return NextResponse.json(
       { suggestedCategoryIds: [] as string[], priorityCheckboxIds: [] as string[] },

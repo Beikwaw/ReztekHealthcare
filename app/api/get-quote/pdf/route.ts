@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse, logZodSafeParseFailure } from "@/lib/errors"
 import { getAdminFirestore } from "@/lib/firebase-admin"
 import { getQuotePdfBuffer } from "@/lib/get-quote-pdf-server"
 import { doctorLeadStoredSchema } from "@/lib/get-quote"
@@ -22,7 +24,11 @@ export async function GET(request: NextRequest) {
     const raw = snap.data() as Record<string, unknown>
     const parsed = doctorLeadStoredSchema.safeParse(raw)
     if (!parsed.success) {
-      return NextResponse.json({ error: "Lead data is invalid" }, { status: 500 })
+      logZodSafeParseFailure(parsed.error, "get-quote/pdf")
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.VALIDATION_INPUT, code: ERROR_CODES.VALIDATION_ERROR },
+        { status: 400 },
+      )
     }
 
     const lead = { id: snap.id, ...parsed.data }
@@ -38,9 +44,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to generate PDF"
-    console.error("[get-quote/pdf] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "get-quote/pdf")
   }
 }
 

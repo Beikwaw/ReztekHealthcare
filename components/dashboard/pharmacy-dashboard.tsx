@@ -1,7 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { LucideIcon } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { DashboardHero, dashboardQuickActionClass, dashboardListRowClass } from "@/components/dashboard/dashboard-hero"
+import { DashboardPanel } from "@/components/dashboard/dashboard-card"
+import { StatCard } from "@/components/dashboard/stat-card"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 import { useConsultationsRealtime } from "@/lib/firestore-hooks"
@@ -10,7 +15,6 @@ import {
   Package,
   Clock,
   CheckCircle2,
-  XCircle,
   ArrowRight,
   Activity,
   ShoppingCart,
@@ -52,34 +56,40 @@ export function PharmacyDashboard() {
     (p) => new Date(p.date) >= todayStart && new Date(p.date) < todayEnd
   )
 
-  const stats = [
+  const stats: {
+    title: string
+    value: number
+    icon: LucideIcon
+    description: string
+    variant: "amber" | "green" | "blue" | "default"
+  }[] = [
     {
       title: "Pending Prescriptions",
       value: pendingPrescriptions.length,
       icon: Clock,
-      color: "bg-amber-500",
       description: "Awaiting fulfillment",
+      variant: "amber",
     },
     {
       title: "Dispensed Today",
       value: todayPrescriptions.filter((p) => p.dispensed).length,
       icon: CheckCircle2,
-      color: "bg-emerald-500",
       description: "Completed today",
+      variant: "green",
     },
     {
       title: "Total Dispensed",
       value: dispensedPrescriptions.length,
       icon: Package,
-      color: "bg-blue-500",
       description: "All time",
+      variant: "blue",
     },
     {
       title: "Total Prescriptions",
       value: prescriptions.length,
       icon: FileText,
-      color: "bg-primary",
       description: "In system",
+      variant: "default",
     },
   ]
 
@@ -89,118 +99,99 @@ export function PharmacyDashboard() {
     .slice(0, 5)
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Welcome back, {user?.name?.split(" ")[0]}
-          </h1>
-          <p className="text-muted-foreground">
-            Manage prescriptions and pharmacy orders.
-          </p>
-        </div>
-        <Button asChild>
+    <div className="space-y-8">
+      <DashboardHero
+        title={<>Welcome back, {user?.name?.split(" ")[0]}</>}
+        subtitle="Manage prescriptions and pharmacy orders."
+      >
+        <Button asChild className="rounded-xl shadow-sm">
           <Link href="/dashboard/pharmacy/orders">
-            <ShoppingCart className="w-4 h-4 mr-2" />
+            <ShoppingCart className="mr-2 h-4 w-4" />
             View Orders
           </Link>
         </Button>
-      </div>
+      </DashboardHero>
 
-      {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className="border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.description}</p>
-                </div>
-                <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}>
-                  <stat.icon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            description={stat.description}
+            icon={stat.icon}
+            variant={stat.variant}
+          />
         ))}
       </div>
 
-      {/* Quick Actions & Recent Prescriptions */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DashboardPanel title="Quick Actions">
+          <div className="space-y-3">
             <Link
               href="/dashboard/pharmacy/pending"
-              className="flex items-center justify-between p-4 rounded-xl bg-amber-500/5 hover:bg-amber-500/10 transition-colors group"
+              className={cn(dashboardQuickActionClass, "from-amber-500/10 to-muted/20 hover:border-amber-500/35")}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-white" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 shadow-sm">
+                  <Clock className="h-5 w-5 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-foreground">Pending Prescriptions</p>
                   <p className="text-sm text-muted-foreground">Review and fulfill orders</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-500 transition-colors" />
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-amber-600" />
             </Link>
 
             <Link
               href="/dashboard/pharmacy/inventory"
-              className="flex items-center justify-between p-4 rounded-xl bg-blue-500/5 hover:bg-blue-500/10 transition-colors group"
+              className={cn(dashboardQuickActionClass, "from-sky-500/10 to-muted/20 hover:border-sky-500/35")}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-                  <Package className="w-5 h-5 text-white" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-600 shadow-sm">
+                  <Package className="h-5 w-5 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-foreground">Inventory Management</p>
                   <p className="text-sm text-muted-foreground">Manage stock levels</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-blue-500 transition-colors" />
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-sky-600" />
             </Link>
 
             <Link
               href="/dashboard/pharmacy/orders"
-              className="flex items-center justify-between p-4 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors group"
+              className={cn(dashboardQuickActionClass, "from-emerald-500/10 to-muted/20 hover:border-emerald-500/35")}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
-                  <ShoppingCart className="w-5 h-5 text-white" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-600 shadow-sm">
+                  <ShoppingCart className="h-5 w-5 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-foreground">All Orders</p>
                   <p className="text-sm text-muted-foreground">View order history</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-emerald-600" />
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </DashboardPanel>
 
-        {/* Recent Prescriptions */}
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Recent Prescriptions</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
+        <DashboardPanel
+          title="Recent Prescriptions"
+          action={
+            <Button variant="ghost" size="sm" className="rounded-lg" asChild>
               <Link href="/dashboard/pharmacy/orders">View All</Link>
             </Button>
-          </CardHeader>
-          <CardContent>
+          }
+        >
             {recentPrescriptions.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {recentPrescriptions.map((prescription, index) => (
                   <div
                     key={`${prescription.consultationId}-${index}`}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    className={dashboardListRowClass}
                   >
                     <div className="flex-1">
                       <p className="font-medium text-sm text-foreground">
@@ -210,44 +201,40 @@ export function PharmacyDashboard() {
                         {prescription.medication} - {prescription.dosage}
                       </p>
                     </div>
-                    <Badge variant="secondary" className="bg-amber-500">
+                    <Badge variant="secondary" className="rounded-full bg-amber-500 text-white hover:bg-amber-600">
                       Pending
                     </Badge>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Package className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+              <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 py-10 text-center">
+                <Package className="mx-auto mb-2 h-10 w-10 text-muted-foreground/45" />
                 <p className="text-muted-foreground">No prescriptions yet</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </DashboardPanel>
       </div>
 
-      {/* Pending Prescriptions Alert */}
       {pendingPrescriptions.length > 0 && (
-        <Card className="border-amber-500/20 bg-amber-500/5">
-          <CardContent className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-white" />
+        <Card className="overflow-hidden rounded-2xl border-amber-500/25 bg-gradient-to-br from-amber-500/10 via-card to-card shadow-[0_8px_32px_-16px_rgba(245,158,11,0.2)]">
+          <CardContent className="p-6 sm:p-7">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4 sm:items-center">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500 shadow-md">
+                  <Clock className="h-6 w-6 text-white" />
                 </div>
                 <div>
                   <h3 className="font-semibold text-foreground">
                     {pendingPrescriptions.length} Pending Prescription{pendingPrescriptions.length !== 1 ? "s" : ""}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Review and fulfill pending pharmacy orders
-                  </p>
+                  <p className="text-sm text-muted-foreground">Review and fulfill pending pharmacy orders</p>
                 </div>
               </div>
-              <Button asChild>
+              <Button className="rounded-xl shadow-sm" asChild>
                 <Link href="/dashboard/pharmacy/pending">
                   Review Now
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>

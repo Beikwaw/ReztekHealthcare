@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Loader2, Eye, EyeOff } from "lucide-react"
 import { FadeIn } from "@/components/animations/fade-in"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { notifyError, notifySuccess, withLoadingToast } from "@/lib/toast-utils"
 
 export default function LoginPage() {
@@ -32,7 +33,7 @@ export default function LoginPage() {
       notifySuccess("formSubmitted")
       router.push("/dashboard")
     } else {
-      const message = result.error || "Invalid email or password."
+      const message = result.error || ERROR_MESSAGES.INVALID_CREDENTIALS
       setError(message)
       notifyError("apiFailed", message)
     }

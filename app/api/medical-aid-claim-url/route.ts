@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getFirebaseAdmin, getAdminStorage } from "@/lib/firebase-admin"
+import { apiErrorResponse } from "@/lib/errors"
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,9 +60,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: signedUrl })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to generate claim URL"
-    console.error("[medical-aid-claim-url] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "medical-aid-claim-url")
   }
 }
 

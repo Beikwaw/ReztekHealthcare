@@ -7,6 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { getSafeClientErrorMessage, getSafeMessageFromResponse } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { Loader2 } from "lucide-react"
 
 type DemoRow = {
@@ -43,7 +45,7 @@ export default function AdminDemoRequestsPage() {
         const data = (await res.json()) as { demoRequests: DemoRow[] }
         if (!cancelled) setRows(data.demoRequests || [])
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load demo requests")
+        if (!cancelled) setError(getSafeClientErrorMessage(e, ERROR_MESSAGES.GENERIC))
       } finally {
         if (!cancelled) setLoading(false)
       }

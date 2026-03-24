@@ -25,7 +25,7 @@ export function DashboardHeader() {
   const unreadCount = userNotifications.filter((n) => !n.read).length
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-card px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/60 bg-card/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-card/70 lg:px-6">
       {/* Mobile Menu */}
       <Sheet>
         <SheetTrigger asChild>
@@ -59,29 +59,25 @@ export function DashboardHeader() {
               <span className="sr-only">Notifications</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-            <DropdownMenuSeparator />
+          <DropdownMenuContent align="end" className="w-80 rounded-xl border-border/60 p-0 shadow-lg">
+            <div className="border-b border-border/50 bg-muted/30 px-3 py-2">
+              <DropdownMenuLabel className="p-0 text-sm font-semibold">Notifications</DropdownMenuLabel>
+            </div>
+            <DropdownMenuSeparator className="hidden" />
             {userNotifications.length === 0 ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No notifications
-              </div>
+              <div className="p-6 text-center text-sm text-muted-foreground">No notifications</div>
             ) : (
               userNotifications.slice(0, 5).map((notification) => (
                 <DropdownMenuItem
                   key={notification.id}
-                  className="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                  className="cursor-pointer flex-col items-start gap-1 rounded-none border-b border-border/30 p-3 last:border-0 focus:bg-muted/50"
                   onClick={() => markNotificationRead(notification.id)}
                 >
-                  <div className="flex items-center gap-2 w-full">
-                    <span className="font-medium text-sm">{notification.title}</span>
-                    {!notification.read && (
-                      <span className="h-2 w-2 rounded-full bg-primary" />
-                    )}
+                  <div className="flex w-full items-center gap-2">
+                    <span className="text-sm font-medium">{notification.title}</span>
+                    {!notification.read ? <span className="h-2 w-2 shrink-0 rounded-full bg-primary" /> : null}
                   </div>
-                  <span className="text-xs text-muted-foreground line-clamp-2">
-                    {notification.message}
-                  </span>
+                  <span className="line-clamp-2 text-xs text-muted-foreground">{notification.message}</span>
                 </DropdownMenuItem>
               ))
             )}

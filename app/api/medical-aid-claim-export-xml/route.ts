@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { Timestamp } from "firebase-admin/firestore"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 import { buildMedicalAidClaimXml } from "@/lib/medical-aid-claim-xml"
 import type { MedicalAidClaim } from "@/lib/types"
@@ -173,8 +174,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: signedXmlUrl, claimId })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to export XML"
-    console.error("[medical-aid-claim-export-xml] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "medical-aid-claim-export-xml")
   }
 }

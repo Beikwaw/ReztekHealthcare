@@ -25,6 +25,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getSafeMessageFromResponse } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { Loader2, CalendarDays, Download, MapPin } from "lucide-react"
 
 type LeadResponse = { lead: DoctorLeadStored }
@@ -78,9 +80,9 @@ export default function GetQuoteResultClient() {
       setError("")
       const res = await fetch(`/api/get-quote/lead?leadId=${encodeURIComponent(leadId)}`)
       if (!res.ok) {
-        const payload = (await res.json().catch(() => null)) as { error?: string } | null
+        const msg = await getSafeMessageFromResponse(res, ERROR_MESSAGES.GENERIC)
         if (!cancelled) {
-          setError(payload?.error || "Could not load your quote.")
+          setError(msg)
           setLoading(false)
         }
         return

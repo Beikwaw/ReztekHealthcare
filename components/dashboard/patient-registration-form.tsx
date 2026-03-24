@@ -21,6 +21,8 @@ import { addPatientAuditLog } from "@/lib/firebase"
 import { StatusDialog } from "@/components/ui/status-dialog"
 import { LoadingButton } from "@/components/feedback/loading-button"
 import { OverlaySpinner } from "@/components/feedback/overlay-spinner"
+import { getSafeClientErrorMessage } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { notifyError, notifySuccess, withLoadingToast } from "@/lib/toast-utils"
 import { UserPlus, Plus, Trash2 } from "lucide-react"
 import { MEDICAL_AID_SCHEMES } from "@/lib/medical-aid-schemes"
@@ -345,7 +347,7 @@ export function PatientRegistrationForm() {
       notifySuccess("recordCreated")
       router.push(`/dashboard?postRegistration=${createdPatient.id}`)
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to register patient"
+      const message = getSafeClientErrorMessage(err, ERROR_MESSAGES.OPERATION_FAILED)
       setError(message)
       notifyError("firebaseWriteFailed", message)
       setStatusDialogTitle("Registration Error")
@@ -364,7 +366,7 @@ export function PatientRegistrationForm() {
   }, [error])
 
   return (
-    <Card className="relative max-w-5xl mx-auto border-border/50 overflow-visible">
+    <Card className="relative mx-auto max-w-5xl overflow-visible rounded-2xl border-border/60 bg-card/90 shadow-[0_8px_40px_-28px_rgba(15,23,42,0.18)] backdrop-blur-sm">
       <OverlaySpinner show={loading} label="Submitting patient..." />
       <CardHeader>
         <CardTitle className="flex items-center gap-2">

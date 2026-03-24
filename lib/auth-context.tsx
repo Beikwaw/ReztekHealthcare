@@ -13,6 +13,7 @@ import {
   type UserProfileFromFirestore,
 } from "./firebase"
 import { type User as FirebaseUser } from "firebase/auth"
+import { mapFirebaseClientError } from "@/lib/client-errors"
 
 interface AuthContextType {
   user: User | null
@@ -240,8 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true }
     } catch (error: unknown) {
       setIsLoading(false)
-      const errorMessage = error instanceof Error ? error.message : "Login failed"
-      return { success: false, error: errorMessage }
+      return { success: false, error: mapFirebaseClientError(error) }
     }
   }, [])
 
@@ -276,8 +276,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { success: true }
     } catch (error: unknown) {
       setIsLoading(false)
-      const errorMessage = error instanceof Error ? error.message : "Registration failed"
-      return { success: false, error: errorMessage }
+      return { success: false, error: mapFirebaseClientError(error) }
     }
   }, [])
 

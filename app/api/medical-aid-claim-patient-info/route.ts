@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 
 function parseBearerToken(request: NextRequest): string | null {
@@ -75,8 +76,6 @@ export async function GET(request: NextRequest) {
       plan: medicalAidInfo?.plan ?? null,
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to fetch patient info"
-    console.error("[medical-aid-claim-patient-info] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "medical-aid-claim-patient-info")
   }
 }

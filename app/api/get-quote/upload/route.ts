@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { FieldValue } from "firebase-admin/firestore"
 
 import { getAdminFirestore, getAdminStorage } from "@/lib/firebase-admin"
+import { apiErrorResponse } from "@/lib/errors"
 
 export const runtime = "nodejs"
 
@@ -89,9 +90,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ uploaded })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Upload failed"
-    console.error("[get-quote/upload] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "get-quote/upload")
   }
 }
 

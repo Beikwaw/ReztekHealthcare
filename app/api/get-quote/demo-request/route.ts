@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { FieldValue } from "firebase-admin/firestore"
 
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse, logZodSafeParseFailure } from "@/lib/errors"
 import { demoRequestSchema } from "@/lib/get-quote"
 import { getAdminFirestore } from "@/lib/firebase-admin"
 
@@ -11,7 +13,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null)
     const parsed = demoRequestSchema.safeParse(body)
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid demo request. Please check all fields." }, { status: 400 })
+      logZodSafeParseFailure(parsed.error, "get-quote/demo-request")
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.VALIDATION_INPUT, code: ERROR_CODES.VALIDATION_ERROR },
+        { status: 400 },
+      )
     }
 
     const input = parsed.data
@@ -30,9 +36,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to submit demo request"
-    console.error("[get-quote/demo-request] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "get-quote/demo-request")
   }
 }
 

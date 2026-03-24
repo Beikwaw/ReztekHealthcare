@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 
 export const runtime = "nodejs"
@@ -25,9 +26,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ ok: true })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to submit medical aid claim"
-    console.error("[medical-aid-claim-submit] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "medical-aid-claim-submit")
   }
 }
 

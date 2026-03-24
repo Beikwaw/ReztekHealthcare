@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server"
 import { Timestamp } from "firebase-admin/firestore"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 import { getBillableItemById } from "@/lib/medical-aid-billable-items"
 
@@ -178,8 +179,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to update billing"
-    console.error("[medical-aid-claim-update-billing] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "medical-aid-claim-update-billing")
   }
 }

@@ -4,6 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 import { claimToConsultationPdfPayload, getMedicalAidConsultationPdfBuffer } from "@/lib/medical-aid-consultation-pdf"
 import type { MedicalAidClaim } from "@/lib/types"
@@ -82,13 +84,14 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("[send-medical-aid-claim-email]", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.EMAIL_SEND_FAILED, code: ERROR_CODES.EMAIL_ERROR },
+        { status: 502 },
+      )
     }
 
     return NextResponse.json({ ok: true, messageId: res?.id })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to send claim email"
-    console.error("[send-medical-aid-claim-email]", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "send-medical-aid-claim-email")
   }
 }

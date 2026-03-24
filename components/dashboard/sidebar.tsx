@@ -33,6 +33,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface NavItem {
   title: string
@@ -301,9 +302,9 @@ export function DashboardSidebar() {
   const navItems = getNavItems()
 
   return (
-    <div className="flex h-full w-full flex-col bg-sidebar text-sidebar-foreground">
+    <div className="flex h-full w-full flex-col border-r border-sidebar-border/80 bg-sidebar text-sidebar-foreground shadow-[4px_0_24px_-12px_rgba(15,23,42,0.12)]">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-3 lg:px-4">
+      <div className="flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border bg-sidebar/95 px-3 backdrop-blur-sm lg:px-4">
         <div className="flex shrink-0 items-center justify-center">
           <Image
             src="/reztek-logo.png"
@@ -331,18 +332,20 @@ export function DashboardSidebar() {
       </div>
 
       {/* User Role Badge - hidden when collapsed */}
-      <div className="hidden px-4 py-3 border-b border-sidebar-border lg:block">
-        <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${roleColors[user?.role as keyof typeof roleColors] || "bg-gray-500"}`} />
-          <span className="text-xs font-medium text-sidebar-foreground/80 truncate">
+      <div className="hidden border-b border-sidebar-border bg-muted/10 px-4 py-3 lg:block">
+        <div className="flex items-center gap-2 rounded-lg border border-sidebar-border/50 bg-sidebar-accent/20 px-2.5 py-1.5">
+          <div
+            className={`h-2 w-2 shrink-0 rounded-full ring-2 ring-white/20 ${roleColors[user?.role as keyof typeof roleColors] || "bg-gray-500"}`}
+          />
+          <span className="truncate text-xs font-medium text-sidebar-foreground/85">
             Logged in as {roleLabels[user?.role as keyof typeof roleLabels] || user?.role}
           </span>
         </div>
       </div>
 
-      {/* Navigation - active: left border + teal tint */}
-      <div className="flex-1 py-4 min-h-0">
-        <nav className="space-y-1 px-2 lg:px-3" aria-label="Main">
+      {/* Navigation */}
+      <ScrollArea className="flex-1 min-h-0 py-3">
+        <nav className="space-y-0.5 px-2 lg:px-3" aria-label="Main">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
             return (
@@ -351,15 +354,21 @@ export function DashboardSidebar() {
                 href={item.href}
                 title={item.title}
                 className={cn(
-                  "flex items-center justify-between rounded-lg px-2 py-2.5 text-sm font-medium transition-colors lg:px-3",
-                  "border-l-2 border-transparent",
+                  "relative flex items-center justify-between rounded-xl px-2 py-2.5 text-sm font-medium transition-all lg:px-3",
+                  "hover:bg-sidebar-accent/45 hover:text-sidebar-foreground",
                   isActive
-                    ? "border-l-accent bg-sidebar-primary/15 text-sidebar-primary"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                    ? "bg-sidebar-primary/18 pl-2.5 text-sidebar-primary shadow-sm ring-1 ring-sidebar-primary/25 lg:pl-3.5"
+                    : "text-sidebar-foreground/72"
                 )}
               >
-                <div className="flex items-center gap-3 min-w-0">
-                  <item.icon className="h-4 w-4 shrink-0" />
+                {isActive ? (
+                  <span
+                    className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-full bg-accent"
+                    aria-hidden
+                  />
+                ) : null}
+                <div className="flex min-w-0 items-center gap-3 pl-0.5">
+                  <item.icon className={cn("h-4 w-4 shrink-0", isActive && "text-sidebar-primary")} />
                   <span className="hidden truncate lg:inline">{item.title}</span>
                 </div>
                 {item.badge != null && (
@@ -379,10 +388,10 @@ export function DashboardSidebar() {
             )
           })}
         </nav>
-      </div>
+      </ScrollArea>
 
-      {/* User block - border-top, 8pt grid */}
-      <div className="border-t border-sidebar-border p-4">
+      {/* User block */}
+      <div className="shrink-0 border-t border-sidebar-border bg-sidebar/95 p-4 backdrop-blur-sm">
         <div className="flex items-center gap-3 mb-3">
           <div className={`flex shrink-0 items-center justify-center w-10 h-10 rounded-xl ${roleColors[user?.role as keyof typeof roleColors] || "bg-gray-500"}`}>
             <span className="text-white font-semibold text-sm">

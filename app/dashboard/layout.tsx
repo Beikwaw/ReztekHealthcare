@@ -53,7 +53,7 @@ export default function DashboardLayout({
 
   return (
     <DataProvider>
-      <div className="flex min-h-screen bg-muted/30">
+      <div className="flex min-h-screen bg-gradient-to-br from-muted/50 via-background to-muted/40">
         {/* Desktop/Tablet Sidebar - full at lg, collapsed (icons only) at md */}
         <aside className="sticky top-0 self-start h-screen shrink-0 hidden md:block w-16 lg:w-64 transition-[width] duration-200">
           <DashboardSidebar />

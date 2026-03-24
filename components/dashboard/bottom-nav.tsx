@@ -50,7 +50,7 @@ export function DashboardBottomNav({ role }: { role?: UserRole }) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card px-2 py-2 md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch justify-around gap-0.5 border-t border-border/60 bg-card/90 px-1 py-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_32px_-16px_rgba(15,23,42,0.12)] backdrop-blur-xl md:hidden"
       aria-label="Primary navigation"
     >
       {items.map((item) => {
@@ -60,24 +60,40 @@ export function DashboardBottomNav({ role }: { role?: UserRole }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors min-w-0 flex-1",
-              isActive ? "text-accent" : "text-muted-foreground hover:text-foreground"
+              "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[11px] font-semibold transition-colors",
+              isActive
+                ? "bg-primary/12 text-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
           >
-            <item.icon className="h-5 w-5 shrink-0" />
-            <span className="truncate max-w-full">{item.label}</span>
+            <span
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-full transition-colors",
+                isActive ? "bg-primary/15 text-primary" : "text-current"
+              )}
+            >
+              <item.icon className="h-5 w-5 shrink-0" />
+            </span>
+            <span className="max-w-full truncate leading-tight">{item.label}</span>
           </Link>
         )
       })}
       <Link
         href={moreHref}
         className={cn(
-          "flex flex-col items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors min-w-0 flex-1 shrink-0",
-          pathname === moreHref ? "text-accent" : "text-muted-foreground hover:text-foreground"
+          "flex min-w-0 shrink-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[11px] font-semibold transition-colors",
+          pathname === moreHref ? "bg-primary/12 text-primary" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
         )}
       >
-        <Menu className="h-5 w-5 shrink-0" />
-        <span>More</span>
+        <span
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-full",
+            pathname === moreHref ? "bg-primary/15 text-primary" : ""
+          )}
+        >
+          <Menu className="h-5 w-5 shrink-0" />
+        </span>
+        <span className="leading-tight">More</span>
       </Link>
     </nav>
   )

@@ -1,8 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { DashboardHero } from "@/components/dashboard/dashboard-hero"
+import { DashboardPanel } from "@/components/dashboard/dashboard-card"
+import { StatCard } from "@/components/dashboard/stat-card"
 import { useAuth } from "@/lib/auth-context"
 import { usePatients, useConsultations, usePatientAuditLogs, useDeletionRequests } from "@/lib/firestore-hooks"
 import { useData } from "@/lib/data-context"
@@ -26,7 +29,7 @@ export function AdminDashboard() {
   const { user, firebaseUser } = useAuth()
   const { patients, loading: patientsLoading } = usePatients()
   const { consultations, loading: consultationsLoading } = useConsultations()
-  const { appointments, invoices } = useData()
+  const { invoices } = useData()
   const { logs: auditLogs } = usePatientAuditLogs()
   const { requests: deletionRequests, loading: deletionRequestsLoading, refetch: refetchDeletionRequests } = useDeletionRequests("pending")
   const [approvingId, setApprovingId] = useState<string | null>(null)
@@ -70,86 +73,72 @@ export function AdminDashboard() {
     }
   }
 
-  const stats = [
+  const stats: {
+    title: string
+    value: number
+    icon: LucideIcon
+    description: string
+    variant: "blue" | "amber" | "green" | "default"
+  }[] = [
     {
       title: "Total Patients",
       value: patients.length,
       icon: Users,
-      color: "bg-blue-500",
       description: "Registered patients",
+      variant: "blue",
     },
     {
       title: "Waiting Today",
       value: waitingCount,
       icon: Activity,
-      color: "bg-amber-500",
       description: "In queue",
+      variant: "amber",
     },
     {
       title: "Consultations Today",
       value: todayConsultations.length,
       icon: Stethoscope,
-      color: "bg-emerald-500",
       description: "Completed",
+      variant: "green",
     },
     {
       title: "Invoices",
       value: invoices.length,
       icon: Receipt,
-      color: "bg-primary",
       description: "Billing records",
+      variant: "default",
     },
   ]
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Admin – {user?.name ?? "Dashboard"}
-          </h1>
-          <p className="text-muted-foreground">
-            Overview of the practice and quick links.
-          </p>
-        </div>
-      </div>
+    <div className="space-y-8">
+      <DashboardHero
+        title={<>Admin – {user?.name ?? "Dashboard"}</>}
+        subtitle="Overview of the practice and quick links."
+      />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat, i) => (
-          <Card
+          <StatCard
             key={stat.title}
+            title={stat.title}
+            value={loading && stat.title === "Total Patients" ? "…" : stat.value}
+            description={stat.description}
+            icon={stat.icon}
+            variant={stat.variant}
             className={cn(
-              "border-border shadow-[var(--shadow-card)] animate-in slide-in-from-bottom-4 duration-300 fill-mode-backwards",
+              "animate-in slide-in-from-bottom-4 duration-300 fill-mode-backwards",
               i === 0 && "delay-0",
               i === 1 && "delay-75",
               i === 2 && "delay-100",
               i === 3 && "delay-150",
             )}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-bold text-foreground">
-                    {loading && stat.title === "Total Patients" ? "…" : stat.value}
-                  </p>
-                  <p className="text-xs text-muted-foreground">{stat.description}</p>
-                </div>
-                <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}>
-                  <stat.icon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          />
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DashboardPanel title="Quick Actions" contentClassName="space-y-3">
             <Link
               href="/admin/leads"
               className="flex items-center justify-between p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group"
@@ -216,50 +205,40 @@ export function AdminDashboard() {
 
             <Link
               href="/dashboard/settings"
-              className="flex items-center justify-between p-4 rounded-xl bg-muted hover:bg-muted/80 transition-colors group"
+              className="flex items-center justify-between rounded-xl border border-border/50 bg-gradient-to-br from-muted/80 to-muted/40 p-4 shadow-sm transition-all hover:border-border hover:shadow-md group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-muted-foreground/20 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-foreground" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted-foreground/15">
+                  <Settings className="h-5 w-5 text-foreground" />
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Settings</p>
                   <p className="text-sm text-muted-foreground">Practice and app settings</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+              <ArrowRight className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-foreground" />
             </Link>
-          </CardContent>
-        </Card>
+        </DashboardPanel>
 
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Reports</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <DashboardPanel title="Reports" contentClassName="space-y-3">
             <Link
               href="/dashboard/reports"
-              className="flex items-center justify-between p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group"
+              className="flex items-center justify-between rounded-xl border border-border/50 bg-gradient-to-br from-primary/8 to-muted/30 p-4 shadow-sm transition-all hover:border-primary/25 hover:shadow-md group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-primary-foreground" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary shadow-sm">
+                  <FileText className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <div>
                   <p className="font-medium text-foreground">Reports</p>
                   <p className="text-sm text-muted-foreground">View and export reports</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <ArrowRight className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
             </Link>
-          </CardContent>
-        </Card>
+        </DashboardPanel>
 
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Deletion requests</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <DashboardPanel title="Deletion requests">
             {deletionRequestsLoading ? (
               <p className="text-sm text-muted-foreground">Loading…</p>
             ) : deletionRequests.length === 0 ? (
@@ -269,7 +248,7 @@ export function AdminDashboard() {
                 {deletionRequests.map((req) => (
                   <div
                     key={req.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border/60 p-3"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-muted/25 p-3 transition-colors hover:bg-muted/40"
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{req.patientName || req.patientId}</p>
@@ -283,6 +262,7 @@ export function AdminDashboard() {
                     <Button
                       size="sm"
                       variant="destructive"
+                      className="shrink-0 rounded-lg"
                       disabled={approvingId !== null}
                       onClick={() => handleApproveDeletion(req.patientId, req.id)}
                     >
@@ -299,24 +279,19 @@ export function AdminDashboard() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+        </DashboardPanel>
 
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Patient Activity (deletions & status)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <DashboardPanel title="Patient Activity (deletions & status)" contentClassName="space-y-3">
             {auditLogs.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 No patient activity logged yet.
               </p>
             ) : (
-              <div className="space-y-2 max-h-80 overflow-y-auto">
+              <div className="max-h-80 space-y-2 overflow-y-auto rounded-xl border border-border/40 bg-muted/15 p-2">
                 {auditLogs.slice(0, 10).map((log) => (
                   <div
                     key={log.id}
-                    className="flex items-start justify-between gap-3 border-b border-border/40 pb-2 last:border-0 last:pb-0"
+                    className="flex items-start justify-between gap-3 rounded-lg border border-transparent px-2 py-2 transition-colors hover:border-border/60 hover:bg-background/80"
                   >
                     <div className="space-y-0.5">
                       <p className="text-sm font-medium">
@@ -343,8 +318,7 @@ export function AdminDashboard() {
                 ))}
               </div>
             )}
-          </CardContent>
-        </Card>
+        </DashboardPanel>
       </div>
     </div>
   )

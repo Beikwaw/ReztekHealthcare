@@ -5,6 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 import { getConsultationPdfBuffer } from "@/lib/consultation-summary-pdf"
 import type { PatientDetailForPdf, BillItemForPdf, ConsultationExtraForPdf } from "@/lib/consultation-summary-pdf"
@@ -148,11 +149,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: signedUrl })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to generate or store PDF"
-    console.error("[consultation-pdf] Error:", msg, e)
-    return NextResponse.json(
-      { error: msg },
-      { status: 500 }
-    )
+    return apiErrorResponse(e, "consultation-pdf")
   }
 }

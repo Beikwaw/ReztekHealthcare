@@ -1,7 +1,12 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import type { LucideIcon } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { DashboardHero, dashboardQuickActionClass, dashboardListRowClass } from "@/components/dashboard/dashboard-hero"
+import { DashboardPanel } from "@/components/dashboard/dashboard-card"
+import { StatCard } from "@/components/dashboard/stat-card"
+import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
 import { usePatients, useConsultations } from "@/lib/firestore-hooks"
@@ -10,7 +15,6 @@ import {
   Users,
   Stethoscope,
   Clock,
-  CalendarDays,
   ArrowRight,
   Activity,
   FileText,
@@ -38,160 +42,147 @@ export function DoctorDashboard() {
     return createdAt >= todayStart
   })
 
-  const stats = [
+  const stats: {
+    title: string
+    value: number
+    icon: LucideIcon
+    description: string
+    variant: "amber" | "blue" | "green" | "default"
+  }[] = [
     {
       title: "Waiting Patients",
       value: waitingPatients.length,
       icon: Clock,
-      color: "bg-amber-500",
       description: "Patients in queue",
+      variant: "amber",
     },
     {
       title: "In Consultation",
       value: inConsultation.length,
       icon: Stethoscope,
-      color: "bg-blue-500",
       description: "Currently seeing",
+      variant: "blue",
     },
     {
       title: "Today's Consultations",
       value: todayConsultations.length,
       icon: FileText,
-      color: "bg-emerald-500",
       description: "Completed today",
+      variant: "green",
     },
     {
       title: "Total Patients",
       value: patients.length,
       icon: Users,
-      color: "bg-primary",
       description: "In the system",
+      variant: "default",
     },
   ]
 
   const loading = patientsLoading || consultationsLoading
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Welcome back, Dr. {user?.name?.split(" ").pop()}
-          </h1>
-          <p className="text-muted-foreground">
-            Here's your patient overview for today.
-          </p>
-        </div>
-        <Button asChild>
+    <div className="space-y-8">
+      <DashboardHero
+        title={<>Welcome back, Dr. {user?.name?.split(" ").pop()}</>}
+        subtitle="Here's your patient overview for today."
+      >
+        <Button asChild className="rounded-xl shadow-sm">
           <Link href="/dashboard/waiting">
-            <Users className="w-4 h-4 mr-2" />
+            <Users className="mr-2 h-4 w-4" />
             View Waiting List ({waitingPatients.length})
           </Link>
         </Button>
-      </div>
+      </DashboardHero>
 
-      {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title} className="border-border/50">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground">{stat.description}</p>
-                </div>
-                <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}>
-                  <stat.icon className="w-6 h-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            key={stat.title}
+            title={stat.title}
+            value={stat.value}
+            description={stat.description}
+            icon={stat.icon}
+            variant={stat.variant}
+          />
         ))}
       </div>
 
-      {/* Quick Actions & Waiting Patients */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Link 
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DashboardPanel title="Quick Actions">
+          <div className="space-y-3">
+            <Link
               href="/dashboard/waiting"
-              className="flex items-center justify-between p-4 rounded-xl bg-amber-500/5 hover:bg-amber-500/10 transition-colors group"
+              className={cn(dashboardQuickActionClass, "from-amber-500/10 to-muted/20 hover:border-amber-500/35")}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-white" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 shadow-sm">
+                  <Clock className="h-5 w-5 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-foreground">Next Patient</p>
                   <p className="text-sm text-muted-foreground">See next patient in queue</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-amber-500 transition-colors" />
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-amber-600" />
             </Link>
-            
-            <Link 
+
+            <Link
               href="/dashboard/consultations"
-              className="flex items-center justify-between p-4 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors group"
+              className={cn(dashboardQuickActionClass, "from-primary/8 to-muted/20 hover:border-primary/35")}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-primary-foreground" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm">
+                  <FileText className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-foreground">View Consultations</p>
                   <p className="text-sm text-muted-foreground">Review past consultations</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
             </Link>
 
-            <Link 
+            <Link
               href="/dashboard/patients"
-              className="flex items-center justify-between p-4 rounded-xl bg-blue-500/5 hover:bg-blue-500/10 transition-colors group"
+              className={cn(dashboardQuickActionClass, "from-sky-500/10 to-muted/20 hover:border-sky-500/35")}
             >
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-600 shadow-sm">
+                  <Users className="h-5 w-5 text-white" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="font-medium text-foreground">All Patients</p>
                   <p className="text-sm text-muted-foreground">View patient records</p>
                 </div>
               </div>
-              <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-blue-500 transition-colors" />
+              <ArrowRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-sky-600" />
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </DashboardPanel>
 
-        {/* Waiting Patients Preview */}
-        <Card className="border-border/50">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg">Waiting Patients</CardTitle>
-            <Button variant="ghost" size="sm" asChild>
+        <DashboardPanel
+          title="Waiting Patients"
+          action={
+            <Button variant="ghost" size="sm" className="rounded-lg" asChild>
               <Link href="/dashboard/waiting">View All</Link>
             </Button>
-          </CardHeader>
-          <CardContent>
+          }
+        >
             {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Activity className="w-5 h-5 animate-spin text-muted-foreground" />
+              <div className="flex items-center justify-center py-10">
+                <Activity className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : waitingPatients.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {waitingPatients.slice(0, 4).map((patient, index) => (
                   <div
                     key={patient.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    className={cn(dashboardListRowClass, "gap-3")}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                        <span className="text-amber-700 font-medium text-sm">#{index + 1}</span>
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 ring-1 ring-amber-200/80">
+                        <span className="text-sm font-semibold text-amber-800">#{index + 1}</span>
                       </div>
                       <div>
                         <p className="font-medium text-sm text-foreground">
@@ -202,7 +193,7 @@ export function DoctorDashboard() {
                         </p>
                       </div>
                     </div>
-                    <Button size="sm" variant="outline" asChild>
+                    <Button size="sm" variant="outline" className="shrink-0 rounded-lg" asChild>
                       <Link href={`/dashboard/consultations/new?patient=${patient.id}`}>
                         Start Consultation
                       </Link>
@@ -211,22 +202,20 @@ export function DoctorDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <Clock className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+              <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 py-10 text-center">
+                <Clock className="mx-auto mb-2 h-10 w-10 text-muted-foreground/45" />
                 <p className="text-muted-foreground">No patients waiting</p>
               </div>
             )}
-          </CardContent>
-        </Card>
+        </DashboardPanel>
       </div>
 
-      {/* AI Features Banner */}
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-                <Brain className="w-6 h-6 text-primary-foreground" />
+      <Card className="overflow-hidden rounded-2xl border-primary/25 bg-gradient-to-br from-primary/8 via-card to-card shadow-[0_8px_32px_-16px_rgba(15,23,42,0.12)]">
+        <CardContent className="p-6 sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4 sm:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary shadow-md">
+                <Brain className="h-6 w-6 text-primary-foreground" />
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">AI-Powered Consultations</h3>
@@ -235,9 +224,7 @@ export function DoctorDashboard() {
                 </p>
               </div>
             </div>
-            <Badge className="bg-primary/20 text-primary hover:bg-primary/30 w-fit">
-              Available
-            </Badge>
+            <Badge className="w-fit rounded-full bg-primary/15 px-3 py-1 text-primary hover:bg-primary/25">Available</Badge>
           </div>
         </CardContent>
       </Card>

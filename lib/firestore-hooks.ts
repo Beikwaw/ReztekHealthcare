@@ -35,6 +35,7 @@ import {
   getDeletionRequests,
   createDeletionRequest as createDeletionRequestInFirebase,
 } from "./firebase"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { useData } from "./data-context"
 
 // Transform raw patient data to Patient type (shared for one-time and real-time)
@@ -142,7 +143,7 @@ export function usePatients() {
       return { id: patientId, ...patientToAdd }
     } catch (err) {
       console.error("Error adding patient:", err)
-      throw new Error(err instanceof Error ? err.message : "Failed to add patient")
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [])
 
@@ -152,7 +153,8 @@ export function usePatients() {
       await updatePatient(patientId, updates)
       // List updates automatically via real-time subscription
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to update patient")
+      console.error("updatePatient:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [])
 
@@ -161,7 +163,8 @@ export function usePatients() {
       await appendPatientVisitInFirebase(patientId)
       // List updates automatically via real-time subscription
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to record visit")
+      console.error("appendPatientVisit:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [])
 
@@ -181,7 +184,8 @@ export function usePatients() {
       await deletePatientFromFirebase(patientId)
       // List updates automatically via real-time subscription
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to delete patient")
+      console.error("removePatient:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [])
 
@@ -226,7 +230,8 @@ export function useConsultations() {
       })) as Consultation[]
       setConsultations(transformedConsultations)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch consultations"))
+      console.error("fetchConsultations:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -242,7 +247,8 @@ export function useConsultations() {
       await fetchConsultations()
       return consultationId
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to create consultation")
+      console.error("addConsultation:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [fetchConsultations])
 
@@ -251,7 +257,8 @@ export function useConsultations() {
       await updateConsultationInFirebase(id, data)
       await fetchConsultations()
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to update consultation")
+      console.error("updateConsultation:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [fetchConsultations])
 
@@ -304,7 +311,8 @@ export function useAppointments() {
       })) as Appointment[]
       setAppointments(transformedAppointments)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch appointments"))
+      console.error("fetchAppointments:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -320,7 +328,8 @@ export function useAppointments() {
       await fetchAppointments()
       return appointmentId
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to create appointment")
+      console.error("addAppointment:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [fetchAppointments])
 
@@ -329,7 +338,8 @@ export function useAppointments() {
       await updateAppointmentInFirebase(id, data)
       await fetchAppointments()
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to update appointment")
+      console.error("updateAppointment:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [fetchAppointments])
 
@@ -338,7 +348,8 @@ export function useAppointments() {
       await deleteAppointmentFromFirebase(id)
       await fetchAppointments()
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to delete appointment")
+      console.error("deleteAppointment:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [fetchAppointments])
 
@@ -363,7 +374,8 @@ export function useInvoices() {
       })) as Invoice[]
       setInvoices(transformed)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch invoices"))
+      console.error("fetchInvoices:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -382,7 +394,8 @@ export function useInvoices() {
       await fetchInvoices()
       return id
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to create invoice")
+      console.error("addInvoice:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [fetchInvoices])
 
@@ -391,7 +404,8 @@ export function useInvoices() {
       await updateInvoiceInFirebase(id, data)
       await fetchInvoices()
     } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to update invoice")
+      console.error("updateInvoice:", err)
+      throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
     }
   }, [fetchInvoices])
 
@@ -429,7 +443,8 @@ export function usePrescriptions(patientId?: string) {
       >
       setPrescriptions(transformed)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch prescriptions"))
+      console.error("fetchPrescriptions:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -445,7 +460,8 @@ export function usePrescriptions(patientId?: string) {
         await addPrescriptionToFirebase(prescriptionData)
         await fetchPrescriptions()
       } catch (err) {
-        throw new Error(err instanceof Error ? err.message : "Failed to create prescription")
+        console.error("addPrescription:", err)
+        throw new Error(ERROR_MESSAGES.OPERATION_FAILED)
       }
     },
     [fetchPrescriptions]
@@ -466,7 +482,8 @@ export function useDeletionRequests(status?: "pending" | "completed" | "rejected
       const data = await getDeletionRequests(status)
       setRequests(data as DeletionRequest[])
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch deletion requests"))
+      console.error("fetchDeletionRequests:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -504,7 +521,8 @@ export function usePatientAuditLogs() {
       })) as PatientAuditLog[]
       setLogs(transformed)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch patient activity logs"))
+      console.error("fetchPatientAuditLogs:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -533,7 +551,8 @@ export function useBillingAuditLogs() {
       })) as BillingAuditLog[]
       setLogs(transformed)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch billing audit logs"))
+      console.error("fetchBillingAuditLogs:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -558,7 +577,8 @@ export function useAuthAuditLogs() {
       const data = await getAuthAuditLogs()
       setLogs(data as { id: string; action: string; userId: string; userEmail?: string; userName?: string; createdAt: Date }[])
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch auth audit logs"))
+      console.error("fetchAuthAuditLogs:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -583,7 +603,8 @@ export function useStaffProfiles() {
       const data = await getStaffProfiles()
       setStaff(data)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch staff"))
+      console.error("fetchStaff:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -616,7 +637,8 @@ export function useMedicalAidClaims(patientId?: string) {
       })) as MedicalAidClaim[]
       setClaims(transformed)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch medical aid claims"))
+      console.error("fetchClaims:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }
@@ -646,7 +668,8 @@ export function useMedicalAidClaim(claimId?: string) {
       setClaim(data as MedicalAidClaim | null)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err : new Error("Failed to fetch claim"))
+      console.error("fetchClaim:", err)
+      setError(new Error(ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setLoading(false)
     }

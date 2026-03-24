@@ -32,6 +32,8 @@ import { format } from "date-fns"
 import { toast } from "sonner"
 import { GENERAL_HEALTH_QUESTIONNAIRE, flattenSelectedSymptoms } from "@/lib/general-health-questionnaire"
 import { parseSummaryAndDiagnosis, generateConsultationSummaryPdf } from "@/lib/consultation-summary-pdf"
+import { getSafeClientErrorMessage, getSafeMessageFromApiPayload } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { formatFrequencyForDisplay } from "@/lib/utils"
 import {
   Dialog,
@@ -227,7 +229,7 @@ export default function ConsultationDetailView() {
       toast.success("Summary and diagnosis saved.")
     } catch (error) {
       console.error("Failed to save summary:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to save summary")
+      toast.error(getSafeClientErrorMessage(error, ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setSavingSummary(false)
     }
@@ -385,7 +387,7 @@ export default function ConsultationDetailView() {
       setShowPrescriptionDialog(false)
     } catch (error) {
       console.error("Failed to save prescription:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to save prescription")
+      toast.error(getSafeClientErrorMessage(error, ERROR_MESSAGES.OPERATION_FAILED))
     }
   }
 
@@ -547,7 +549,7 @@ export default function ConsultationDetailView() {
       await doCompletionFlow()
     } catch (error) {
       console.error("Failed to complete consultation:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to complete consultation")
+      toast.error(getSafeClientErrorMessage(error, ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setCompleting(false)
     }
@@ -627,7 +629,7 @@ export default function ConsultationDetailView() {
       await doCompletionFlow()
     } catch (error) {
       console.error("Failed to proceed:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to proceed")
+      toast.error(getSafeClientErrorMessage(error, ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setCompleting(false)
     }
@@ -842,7 +844,7 @@ export default function ConsultationDetailView() {
       setShowCompletionSuccessDialog(true)
     } catch (error) {
       console.error("Failed to complete consultation:", error)
-      toast.error(error instanceof Error ? error.message : "Failed to complete consultation")
+      toast.error(getSafeClientErrorMessage(error, ERROR_MESSAGES.OPERATION_FAILED))
     } finally {
       setCompleting(false)
     }
@@ -997,7 +999,7 @@ export default function ConsultationDetailView() {
       })
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}))
-        const errMsg = (errBody as { error?: string }).error || `Script PDF failed (${res.status}). Check Vercel logs for [prescription-pdf].`
+        const errMsg = getSafeMessageFromApiPayload(errBody, ERROR_MESSAGES.PDF_GENERATION_FAILED)
         setActionError(`Script PDF: ${errMsg}`)
         toast.error(errMsg)
         return
@@ -1015,7 +1017,7 @@ export default function ConsultationDetailView() {
       }
       toast.success("Script PDF downloaded")
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Network or server error"
+      const msg = getSafeClientErrorMessage(error, ERROR_MESSAGES.NETWORK)
       setActionError(`Script PDF: ${msg}`)
       console.error("[ConsultationDetail] Failed to download prescription PDF:", error)
       toast.error(`Script PDF: ${msg}`)
@@ -1036,7 +1038,7 @@ export default function ConsultationDetailView() {
       })
       if (!res.ok) {
         const errBody = await res.json().catch(() => ({}))
-        const errMsg = (errBody as { error?: string }).error || `Print script failed (${res.status}). Check Vercel logs for [prescription-pdf].`
+        const errMsg = getSafeMessageFromApiPayload(errBody, ERROR_MESSAGES.PDF_GENERATION_FAILED)
         setActionError(`Print script: ${errMsg}`)
         toast.error(errMsg)
         return
@@ -1050,7 +1052,7 @@ export default function ConsultationDetailView() {
         toast.error("Allow pop-ups to print the script.")
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Network or server error"
+      const msg = getSafeClientErrorMessage(error, ERROR_MESSAGES.NETWORK)
       setActionError(`Print script: ${msg}`)
       console.error("[ConsultationDetail] Failed to print script:", error)
       toast.error(`Print script: ${msg}`)
@@ -1101,7 +1103,7 @@ export default function ConsultationDetailView() {
         })
         const pdfErr = await pdfRes.json().catch(() => ({}))
         if (!pdfRes.ok) {
-          const msg = (pdfErr as { error?: string }).error || "Failed to generate consultation PDF"
+          const msg = getSafeMessageFromApiPayload(pdfErr, ERROR_MESSAGES.PDF_GENERATION_FAILED)
           setActionError(`Email (PDF step): ${msg}`)
           toast.error(msg)
           return
@@ -1122,12 +1124,12 @@ export default function ConsultationDetailView() {
         window.location.href = data.mailto
         toast.success(`Open your email client and send the link to ${patientName}.`)
       } else {
-        const msg = data.error || "Failed to send email. Please try again or check that the patient has a valid email address."
+        const msg = getSafeMessageFromApiPayload(data, ERROR_MESSAGES.EMAIL_SEND_FAILED)
         setActionError(`Email: ${msg}`)
         toast.error(msg)
       }
     } catch (error) {
-      const msg = error instanceof Error ? error.message : "Failed to send email. Please try again."
+      const msg = getSafeClientErrorMessage(error, ERROR_MESSAGES.EMAIL_SEND_FAILED)
       setActionError(`Email: ${msg}`)
       console.error("[ConsultationDetail] Send email error:", error)
       toast.error(msg)

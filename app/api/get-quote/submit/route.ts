@@ -11,6 +11,8 @@ import {
   doctorLeadSchema,
 } from "@/lib/get-quote"
 import { getAdminFirestore } from "@/lib/firebase-admin"
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse, logZodSafeParseFailure } from "@/lib/errors"
 
 export const runtime = "nodejs"
 
@@ -192,8 +194,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null)
     const parsed = doctorLeadSchema.safeParse(body)
     if (!parsed.success) {
+      logZodSafeParseFailure(parsed.error, "get-quote/submit")
       return NextResponse.json(
-        { error: "Invalid form submission. Please check required fields." },
+        { error: ERROR_MESSAGES.VALIDATION_INPUT, code: ERROR_CODES.VALIDATION_ERROR },
         { status: 400 },
       )
     }
@@ -245,9 +248,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ leadId: leadRef.id })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to submit quote request"
-    console.error("[get-quote/submit] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "get-quote/submit")
   }
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { FieldValue } from "firebase-admin/firestore"
+import { apiErrorResponse } from "@/lib/errors"
 import { getAdminAuth, getAdminFirestore, getAdminStorage } from "@/lib/firebase-admin"
 
 export const runtime = "nodejs"
@@ -131,8 +132,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error("Admin delete-patient error:", err)
-    const message = err instanceof Error ? err.message : "Delete failed"
-    return NextResponse.json({ error: message }, { status: 500 })
+    return apiErrorResponse(err, "admin/delete-patient")
   }
 }

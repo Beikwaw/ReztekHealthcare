@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getAdminFirestore } from "@/lib/firebase-admin"
+import { apiErrorResponse } from "@/lib/errors"
 
 export const runtime = "nodejs"
 
@@ -43,9 +44,7 @@ export async function GET(request: NextRequest) {
       },
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to load lead"
-    console.error("[get-quote/lead] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "get-quote/lead")
   }
 }
 

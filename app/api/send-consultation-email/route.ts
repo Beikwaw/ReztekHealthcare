@@ -5,6 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 import { getPrescriptionPdfBuffer, type PatientDetailForPdf } from "@/lib/consultation-summary-pdf"
 import { getPatientStoragePath } from "@/lib/utils"
@@ -118,7 +120,7 @@ export async function POST(request: NextRequest) {
     } catch (e) {
       console.error("Failed to generate prescription PDF for email:", e)
       return NextResponse.json(
-        { error: "Failed to generate prescription PDF for email." },
+        { error: ERROR_MESSAGES.PDF_GENERATION_FAILED, code: ERROR_CODES.INTERNAL_ERROR },
         { status: 500 },
       )
     }
@@ -161,7 +163,8 @@ export async function POST(request: NextRequest) {
       )
       return NextResponse.json(
         {
-          error: "Email not configured. On Vercel: add RESEND_API_KEY in Project Settings → Environment Variables. Locally: add to .env.local.",
+          error: ERROR_MESSAGES.EMAIL_NOT_CONFIGURED,
+          code: ERROR_CODES.EMAIL_ERROR,
           mailto: `mailto:${patientEmail}?subject=${encodeURIComponent(
             "Your prescription and invoice - Reztek Healthcare Practice",
           )}&body=${encodeURIComponent(
@@ -230,20 +233,22 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[send-consultation-email] Resend API error:", error)
       const statusCode = (error as { statusCode?: number }).statusCode
-      const message = (error as { message?: string }).message || "Failed to send email"
 
       // Domain or from-address validation issues – treat as configuration and return a softer 503
       if (statusCode === 403 || statusCode === 422) {
         return NextResponse.json(
           {
-            error:
-              "Email configuration is invalid. Please verify the sending domain and FROM address in Resend.",
+            error: ERROR_MESSAGES.EMAIL_CONFIG_INVALID,
+            code: ERROR_CODES.EMAIL_ERROR,
           },
-          { status: 503 }
+          { status: 503 },
         )
       }
 
-      return NextResponse.json({ error: message }, { status: 502 })
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.EMAIL_SEND_FAILED, code: ERROR_CODES.EMAIL_ERROR },
+        { status: 502 },
+      )
     }
 
     const updateData: Record<string, unknown> = {
@@ -262,11 +267,6 @@ export async function POST(request: NextRequest) {
       attachedInvoice: Boolean(invoicePdfBuffer),
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to send email"
-    console.error("[send-consultation-email] Error:", msg, e)
-    return NextResponse.json(
-      { error: msg },
-      { status: 500 }
-    )
+    return apiErrorResponse(e, "send-consultation-email")
   }
 }

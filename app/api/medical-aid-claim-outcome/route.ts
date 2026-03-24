@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 import { getInvoicePdfBuffer } from "@/lib/invoice-pdf-server"
 import { getMedicalAidReceiptPdfBuffer } from "@/lib/medical-aid-receipt-pdf"
@@ -459,14 +461,16 @@ export async function POST(request: NextRequest) {
     if (error) {
       // Do not block claim completion if email fails – log and return success with flag.
       console.error("[medical-aid-claim-outcome] Resend error (email will not be sent, but outcome recorded):", error)
-      return NextResponse.json({ ok: true, invoiceId, emailError: error.message || "Failed to send email" })
+      return NextResponse.json({
+        ok: true,
+        invoiceId,
+        emailError: ERROR_MESSAGES.EMAIL_SEND_FAILED,
+      })
     }
 
     return NextResponse.json({ ok: true, invoiceId })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to process medical aid claim outcome"
-    console.error("[medical-aid-claim-outcome] Error:", msg, e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "medical-aid-claim-outcome")
   }
 }
 

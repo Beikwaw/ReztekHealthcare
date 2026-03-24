@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse } from "@/lib/errors"
 import { parseSummaryAndDiagnosis } from "@/lib/consultation-summary-pdf"
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
@@ -181,8 +183,8 @@ export async function POST(request: NextRequest) {
       const errText = await response.text()
       console.error("OpenAI API error:", response.status, errText)
       return NextResponse.json(
-        { error: "Failed to generate summary from AI service." },
-        { status: 503 }
+        { error: ERROR_MESSAGES.AI_PROCESSING, code: ERROR_CODES.AI_ERROR },
+        { status: 503 },
       )
     }
 
@@ -192,8 +194,8 @@ export async function POST(request: NextRequest) {
     const content = data.choices?.[0]?.message?.content?.trim()
     if (!content) {
       return NextResponse.json(
-        { error: "Empty response from AI service." },
-        { status: 503 }
+        { error: ERROR_MESSAGES.AI_PROCESSING, code: ERROR_CODES.AI_ERROR },
+        { status: 503 },
       )
     }
 
@@ -203,10 +205,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ summary: content, icd10Code })
   } catch (e) {
-    console.error("Consultation summary API error:", e)
-    return NextResponse.json(
-      { error: "An unexpected error occurred." },
-      { status: 500 }
-    )
+    return apiErrorResponse(e, "consultation-summary")
   }
 }

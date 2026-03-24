@@ -17,6 +17,8 @@ import {
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react"
 import type { InvoiceItem } from "@/lib/types"
 import { toast } from "sonner"
+import { getSafeClientErrorMessage } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { getPatient as getFirestorePatient } from "@/lib/firebase"
 import { usePatients, useInvoices } from "@/lib/firestore-hooks"
 
@@ -225,7 +227,7 @@ function NewInvoiceForm() {
         router.push(`/dashboard/billing/${invoice.id}`)
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to create invoice"
+      const message = getSafeClientErrorMessage(err, ERROR_MESSAGES.OPERATION_FAILED)
       toast.error(message)
       console.error("Create invoice error:", err)
     } finally {

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 import { getPrescriptionPdfBuffer, type PatientDetailForPdf } from "@/lib/consultation-summary-pdf"
 import { getPatientStoragePath } from "@/lib/utils"
@@ -110,12 +111,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to generate prescription PDF"
-    console.error("[prescription-pdf] Error:", msg, e)
-    return NextResponse.json(
-      { error: msg },
-      { status: 500 }
-    )
+    return apiErrorResponse(e, "prescription-pdf")
   }
 }
 

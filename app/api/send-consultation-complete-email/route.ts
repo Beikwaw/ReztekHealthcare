@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin } from "@/lib/firebase-admin"
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY
@@ -221,19 +223,21 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[send-consultation-complete-email] Resend API error:", error)
       const statusCode = (error as { statusCode?: number }).statusCode
-      const message = (error as { message?: string }).message || "Failed to send email"
 
       if (statusCode === 403 || statusCode === 422) {
         return NextResponse.json(
           {
-            error:
-              "Email configuration is invalid. Please verify the sending domain and FROM address in Resend.",
+            error: ERROR_MESSAGES.EMAIL_CONFIG_INVALID,
+            code: ERROR_CODES.EMAIL_ERROR,
           },
           { status: 503 },
         )
       }
 
-      return NextResponse.json({ error: message }, { status: 502 })
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.EMAIL_SEND_FAILED, code: ERROR_CODES.EMAIL_ERROR },
+        { status: 502 },
+      )
     }
 
     await db.collection("consultations").doc(consultationId).update({
@@ -243,9 +247,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, id: data?.id })
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "Failed to send completion email"
-    console.error("[send-consultation-complete-email] Unexpected error:", e)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "send-consultation-complete-email")
   }
 }
 

@@ -52,10 +52,10 @@ export function AppointmentsTable({ limit, showViewAll = true }: AppointmentsTab
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-sm backdrop-blur-sm">
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="border-border/50 bg-muted/30 hover:bg-muted/30">
               <TableHead>Patient</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Time</TableHead>
@@ -73,7 +73,10 @@ export function AppointmentsTable({ limit, showViewAll = true }: AppointmentsTab
               </TableRow>
             ) : (
               upcomingAppointments.map((appointment) => (
-                <TableRow key={appointment.id}>
+                <TableRow
+                  key={appointment.id}
+                  className="border-border/40 transition-colors hover:bg-muted/40"
+                >
                   <TableCell className="font-medium">
                     {getPatientName(appointment.patientId)}
                   </TableCell>
@@ -104,7 +107,7 @@ export function AppointmentsTable({ limit, showViewAll = true }: AppointmentsTab
       </div>
       {showViewAll && (
         <div className="flex justify-center">
-          <Button variant="outline" asChild>
+          <Button variant="outline" className="rounded-xl" asChild>
             <Link href="/dashboard/appointments">View All Appointments</Link>
           </Button>
         </div>

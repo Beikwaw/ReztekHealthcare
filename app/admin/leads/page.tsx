@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { getSafeClientErrorMessage, getSafeMessageFromResponse } from "@/lib/client-errors"
+import { ERROR_MESSAGES } from "@/lib/error-messages"
 import { Loader2 } from "lucide-react"
 
 type LeadRow = {
@@ -38,13 +40,13 @@ export default function AdminLeadsPage() {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (!res.ok) {
-          const payload = (await res.json().catch(() => null)) as { error?: string } | null
-          throw new Error(payload?.error || "Failed to load leads")
+          const msg = await getSafeMessageFromResponse(res, ERROR_MESSAGES.GENERIC)
+          throw new Error(msg)
         }
         const data = (await res.json()) as { leads: LeadRow[] }
         if (!cancelled) setRows(data.leads || [])
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load leads")
+        if (!cancelled) setError(getSafeClientErrorMessage(e, ERROR_MESSAGES.GENERIC))
       } finally {
         if (!cancelled) setLoading(false)
       }

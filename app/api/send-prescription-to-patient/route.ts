@@ -5,6 +5,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server"
+import { ERROR_CODES, ERROR_MESSAGES } from "@/lib/error-messages"
+import { apiErrorResponse } from "@/lib/errors"
 import { getFirebaseAdmin, type FirebaseAdmin } from "@/lib/firebase-admin"
 import { getPrescriptionPdfBuffer, type PatientDetailForPdf } from "@/lib/consultation-summary-pdf"
 import { Resend } from "resend"
@@ -183,13 +185,15 @@ export async function POST(request: NextRequest) {
   
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error("[send-prescription-to-patient] Resend error:", error)
+      return NextResponse.json(
+        { error: ERROR_MESSAGES.EMAIL_SEND_FAILED, code: ERROR_CODES.EMAIL_ERROR },
+        { status: 502 },
+      )
     }
 
     return NextResponse.json({ success: true, message: "Prescription sent to patient." })
   } catch (e: unknown) {
-    const err = e as { message?: string }
-    const msg = typeof err?.message === "string" ? err.message : "Failed to send prescription email"
-    return NextResponse.json({ error: msg }, { status: 500 })
+    return apiErrorResponse(e, "send-prescription-to-patient")
   }
 }
